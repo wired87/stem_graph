@@ -1,0 +1,50 @@
+data
+embed_models
+protein/expression/*.tsv
+tissue/data
+tissue/embed_models
+.env
+keywords/key_words_uniprot.json
+db.sqlite3
+*.obo
+staticfiles
+# Secrets
+*.json
+# Python
+.venv/
+.runtime_packages/
+runtime_packages/
+__pycache__/
+**/__pycache__/
+.pytest_cache/
+*.pyc
+*.csv
+*.tsv
+*.pyo
+*.pyd
+*.parquet
+*.egg-info/
+dist/
+build/
+
+# IDE
+.idea/
+.vscode/
+.claude
+.venv
+.github
+
+# Generated output
+output/
+tests/out-dir/
+tests/logs/
+
+# Runtime cache + logs (DuckDB graph cache, smoke / pipeline logs, generated deck)
+local.duckdb
+data/*.log
+pitch_deck/deck.pdf
+.idea/workspace.xml
+
+# OS
+.DS_Store
+Thumbs.db

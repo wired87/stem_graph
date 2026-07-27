@@ -1,0 +1,2 @@
+Workflow defines that rule download_ensmble_fasta is eligible for caching between workflows (use the --cache argument to enable this).
+Assuming unrestricted shared filesystem usage.

@@ -1,0 +1,10 @@
+.venv
+.git
+.idea
+**/__pycache__
+**/*.pyc
+**/.git
+db.sqlite3
+product/executable/.git
+product/executable/_g_storage/.git
+file_master/_g_storage/.git

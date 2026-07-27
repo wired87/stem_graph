@@ -1,0 +1,4 @@
+from protein.expression.validate_expression_data import validate_download_expression
+
+# VALIDATE EXPRESSION FILES
+validate_download_expression()

@@ -1,0 +1,4 @@
+# Local secrets — force-added only when publishing to the private project repo
+.env
+auth/*
+!auth/.gitkeep

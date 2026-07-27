@@ -1,0 +1,12 @@
+.venv/
+venv/
+__pycache__/
+*.pyc
+.idea/
+output/
+firegraph-output/
+dist/
+build/
+*.egg-info/
+.env
+
