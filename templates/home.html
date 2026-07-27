@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}CNVMaster · Discovery Dispenser{% endblock %}
+{% block content %}
+<section class="hero">
+  <div>
+    <p class="eyebrow">ONE SAMPLE IN · TRACEABLE EVIDENCE OUT</p>
+    <h1>Your biomedical<br><em>discovery machine.</em></h1>
+    <p class="lede">Choose a chamber, load your evidence, and dispense an analysis. Every module uses the same simple rhythm.</p>
+  </div>
+  <div class="hero-machine" aria-hidden="true">
+    <div class="helix"><i></i><i></i><i></i><i></i><i></i></div>
+    <span>06</span><small>MODULES ONLINE</small>
+  </div>
+</section>
+<section class="machine-grid" aria-label="Available research modules">
+  <a class="machine-card cnv" href="{% url 'cnv-workspace' %}"><span class="slot">01</span><i></i><small>GENOME</small><h2>CNV analysis</h2><p>Load array files and launch the StemCNV workflow.</p><b>Dispense analysis →</b></a>
+  <a class="machine-card protein" href="{% url 'protein_predictor:workspace' %}"><span class="slot">02</span><i></i><small>PROTEOME</small><h2>Protein discovery</h2><p>Prioritize proteins by tissue, function, and class.</p><b>Dispense candidates →</b></a>
+  <a class="machine-card go" href="{% url 'go-workspace' %}"><span class="slot">03</span><i></i><small>ONTOLOGY</small><h2>GO function filter</h2><p>Align gene annotations to a biological function.</p><b>Dispense mapping →</b></a>
+  <a class="machine-card drug" href="{% url 'drug_master:workspace' %}"><span class="slot">04</span><i></i><small>THERAPEUTICS</small><h2>Precision drugs</h2><p>Trace targets, mechanisms, pathways, and evidence.</p><b>Dispense graph →</b></a>
+  <a class="machine-card files" href="{% url 'file-workspace' %}"><span class="slot">05</span><i></i><small>STORAGE</small><h2>File vault</h2><p>Inspect and manage workflow input artifacts.</p><b>Open vault →</b></a>
+  <a class="machine-card compute" href="{% url 'compute-workspace' %}"><span class="slot">06</span><i></i><small>INFRASTRUCTURE</small><h2>Compute control</h2><p>Start or stop the analysis worker cleanly.</p><b>Open controls →</b></a>
+</section>
+{% endblock %}

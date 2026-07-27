@@ -1,0 +1,12 @@
+<header class="terminal__header">
+  <div>
+    <p class="eyebrow">CNVMASTER · PROTEIN WORKSPACE</p>
+    <h1>Calibrate. Query. Prioritize.</h1>
+    <p class="lede">Explore proteins by anatomical context, biological function, and molecular class.</p>
+    <nav class="workspace-nav">
+      <a class="is-active" href="{% url 'protein_predictor:workspace' %}">Protein workspace</a>
+      <a href="{% url 'drug_master:workspace' %}">Drug workspace</a>
+    </nav>
+  </div>
+  <div class="status" id="system-status"><span></span> Ready</div>
+</header>

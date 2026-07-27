@@ -193,10 +193,10 @@ class DBManager:
                 "embedding",
             ]
         )
-        print("entries[0]", entries[0], type(entries[0]))
+        print("entries[0]", type(entries[0]))
         #
         embeddings = [np.asarray(ast.literal_eval(i[1])) for i in entries]
-        print("embeddings[0]", embeddings[0], type(embeddings[0]))
+        print("embeddings[0]", type(embeddings[0]))
         embeddings = np.array(embeddings)
 
         ids = [i[0] for i in entries]

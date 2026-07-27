@@ -217,25 +217,33 @@ def align_goterms_to_functions(graph, cfg, embed_batch_fn=None):
         )
     )
     goterm_data = graph.get_node("goterm")["data"]
-    labels = [
-        row.get("definition") or row.get("name") or row["id"]
-        for row in goterm_data
-    ]
+    # A GO accession alone has no lexical biological meaning.  Do not feed
+    # bare IDs into a text embedder; retain their canonical indices but only
+    # align rows for which Ensembl/configuration supplied descriptive text.
+    labelled_terms = []
+    for row in goterm_data:
+        label = row.get("definition") or row.get("name")
+        if label and str(label).strip().upper() != row["id"]:
+            labelled_terms.append((row["idx"], str(label)))
     by_function = [[] for _ in functions]
     score_rows = [[] for _ in functions]
     aligned = set()
 
-    if functions and labels:
+    if functions and labelled_terms:
         function_vectors = np.asarray(embed_batch_fn(functions), dtype=np.float32)
-        goterm_vectors = np.asarray(embed_batch_fn(labels), dtype=np.float32)
+        goterm_vectors = np.asarray(
+            embed_batch_fn([label for _, label in labelled_terms]),
+            dtype=np.float32,
+        )
         function_norms = np.linalg.norm(function_vectors, axis=1, keepdims=True)
         goterm_norms = np.linalg.norm(goterm_vectors, axis=1, keepdims=True)
         function_vectors = function_vectors / np.maximum(function_norms, 1e-12)
         goterm_vectors = goterm_vectors / np.maximum(goterm_norms, 1e-12)
         scores = function_vectors @ goterm_vectors.T
         for function_idx, row in enumerate(scores):
-            for goterm_idx, score in enumerate(row):
+            for local_idx, score in enumerate(row):
                 if float(score) > threshold:
+                    goterm_idx = labelled_terms[local_idx][0]
                     by_function[function_idx].append(goterm_idx)
                     score_rows[function_idx].append(
                         {"goterm_idx": goterm_idx, "score": float(score)}
@@ -251,6 +259,11 @@ def align_goterms_to_functions(graph, cfg, embed_batch_fn=None):
             "data": sorted(aligned),
             "by_function": by_function,
             "scores": score_rows,
+            "method": "cosine_similarity_of_text_embeddings",
+            "unlabelled_goterm_indices": sorted(
+                set(range(len(goterm_data)))
+                - {idx for idx, _ in labelled_terms}
+            ),
         }
     )
     return sorted(aligned)

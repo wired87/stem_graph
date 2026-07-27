@@ -10,10 +10,6 @@ for _p in Path(__file__).resolve().parents:
             sys.path.insert(0, str(_p))
         break
 
-from drug_master.drug import ChemblFetcher
-
-chembl_fetcher = ChemblFetcher()
-
 def set_interaction_scroes_drug_trgt(g):
     #
     molecules: list[tuple] = [

@@ -1,0 +1,37 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#08110f">
+  <title>{% block title %}CNVMaster Lab{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'lab/lab.css' %}">
+  {% block head %}{% endblock %}
+</head>
+<body class="theme-{{ theme|default:'home' }}">
+  <div class="ambient" aria-hidden="true"><i></i><i></i><i></i></div>
+  <header class="topbar">
+    <a class="brand" href="{% url 'home' %}" aria-label="CNVMaster home">
+      <span class="brand__mark">C</span>
+      <span><b>CNVMASTER</b><small>Discovery dispenser</small></span>
+    </a>
+    <nav class="topnav" aria-label="Primary">
+      <a href="{% url 'cnv-workspace' %}">CNV</a>
+      <a href="{% url 'protein_predictor:workspace' %}">Protein</a>
+      <a href="{% url 'go-workspace' %}">GO terms</a>
+      <a href="{% url 'drug_master:workspace' %}">Drugs</a>
+      <a href="{% url 'file-workspace' %}">Files</a>
+      <a href="{% url 'compute-workspace' %}">Compute</a>
+    </nav>
+    <div class="ready-light"><span></span> System ready</div>
+  </header>
+  <main class="shell">{% block content %}{% endblock %}</main>
+  <footer class="site-footer">
+    <span>CNVMaster research environment</span>
+    <span>Research use only · Evidence remains traceable</span>
+  </footer>
+  <script src="{% static 'lab/lab.js' %}" defer></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

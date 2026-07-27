@@ -1,0 +1,26 @@
+<section class="panel">
+  <div class="panel__number">02</div>
+  <div class="panel__body">
+    <p class="eyebrow">FUNCTIONAL REPRESENTATION</p>
+    <h2>Describe the biological process</h2>
+    <label class="field">
+      <span>Functional annotations</span>
+      <input id="functional-annotation" type="text" value="synaptic transmission"
+             placeholder="synaptic transmission, dopamine signaling">
+      <small>Separate multiple terms with commas.</small>
+    </label>
+    <label class="field">
+      <span>Protein type</span>
+      <select id="protein-type">
+        <option value="">No class restriction</option>
+        <option selected>Ion channel</option>
+        <option>Enzyme</option>
+        <option>Neuropeptide</option>
+      </select>
+    </label>
+    <button class="run-button" id="run-button" type="submit">
+      <span>Run protein synthesis</span><b>→</b>
+    </button>
+    <p class="error" id="error-message" role="alert" hidden></p>
+  </div>
+</section>

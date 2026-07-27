@@ -8,8 +8,8 @@ from __future__ import annotations
 
 
 import itertools
-from drug.drugbank_ddi import build_ddi_index, pair_ddi_severity
-from drug.guidetopharmacology import GtoPdbFetcher, validate_molecule_on_targets
+from drug_master.drugbank_ddi import build_ddi_index, pair_ddi_severity
+from drug_master.guidetopharmacology import GtoPdbFetcher, validate_molecule_on_targets
 
 
 _CNS_UBERON_PREFIXES = ("UBERON_0000955", "UBERON_0001017", "UBERON_0002037")

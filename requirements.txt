@@ -12,6 +12,7 @@ obonet
 snakemake
 pyyaml
 aiohttp
+aiofiles
 aiolimiter
 duckdb
 httpx

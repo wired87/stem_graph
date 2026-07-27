@@ -5,7 +5,7 @@ Prompt: predict best working drug stack under all available parameters — produ
 """
 from __future__ import annotations
 
-from drug.ic50_potency import molecule_potency_score, stack_potency_score
+from drug_master.ic50_potency import molecule_potency_score, stack_potency_score
 
 
 def _stack_members(attrs: dict) -> list[str]:

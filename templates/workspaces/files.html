@@ -1,0 +1,7 @@
+{% extends "base.html" %}{% block title %}File Vault · CNVMaster{% endblock %}
+{% block content %}{% include "workspaces/_header.html" with eyebrow="STORAGE · ARTIFACT VAULT" heading="Store. Inspect. Reuse." lede="Manage shared workflow artifacts without an authentication detour." %}
+<div class="vending-workflow">
+<section class="chamber"><span class="chamber__number">01</span><div><p class="eyebrow">STORE ARTIFACT</p><h2>Place text data in the vault</h2><form class="js-api-form" data-endpoint="{% url 'file_master-set-file_master' %}">{% csrf_token %}<label class="field"><span>File name</span><input name="name" placeholder="input/notes.json" required></label><label class="field"><span>Content</span><textarea name="content" rows="7" required></textarea></label><button class="dispense" type="submit">Store file <b>→</b></button><p class="error" data-error hidden></p></form></div></section>
+<section class="chamber"><span class="chamber__number">02</span><div><p class="eyebrow">INVENTORY</p><h2>List available artifacts</h2><form class="js-api-form" data-endpoint="{% url 'file_master-get-file_master-names' %}">{% csrf_token %}<button class="dispense" type="submit">Refresh vault <b>↻</b></button><p class="error" data-error hidden></p></form></div></section>
+<section class="chamber results"><span class="chamber__number">03</span><div><p class="eyebrow">OUTPUT TRAY</p><h2>Vault response</h2><pre class="result-box" data-global-result>Waiting for a vault action.</pre></div></section>
+</div>{% endblock %}

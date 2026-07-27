@@ -1,4 +1,5 @@
 from collections import deque
+from drug_master.influence import get_edge_multiplier
 
 
 def propagate_drug_scores(
@@ -155,52 +156,6 @@ def walk_scores(
                     depth + 1,
                 )
             )
-
-
-def get_edge_multiplier(
-    edge_attrs: dict,
-):
-    #
-    # Strong stimulation
-    #
-    if edge_attrs.get(
-        "consensus_stimulation"
-    ):
-        return 1.0
-
-    #
-    # Strong inhibition
-    #
-    if edge_attrs.get(
-        "consensus_inhibition"
-    ):
-        return -1.0
-
-    #
-    # Direction known
-    #
-    if edge_attrs.get(
-        "consensus_direction"
-    ):
-        return 0.5
-
-    #
-    # Weak evidence
-    #
-    if edge_attrs.get(
-        "omnipath_stimulation"
-    ):
-        return 0.75
-
-    if edge_attrs.get(
-        "omnipath_inhibition"
-    ):
-        return -0.75
-
-    #
-    # Unknown
-    #
-    return 0.0
 
 
 if __name__ == "__main__":

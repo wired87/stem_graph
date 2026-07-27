@@ -1,0 +1,8 @@
+{% extends "base.html" %}{% block title %}CNV Analysis · CNVMaster{% endblock %}
+{% block content %}{% include "workspaces/_header.html" with eyebrow="GENOME · STEMCNV WORKFLOW" heading="Load. Call. Annotate." lede="Feed array evidence into one controlled CNV analysis run." %}
+<form class="vending-workflow js-api-form" data-endpoint="{% url 'run-local' %}" data-mode="multipart">
+{% csrf_token %}
+<section class="chamber"><span class="chamber__number">01</span><div><p class="eyebrow">LOAD SAMPLE</p><h2>Drop the complete run bundle</h2><label class="dropzone"><input name="files" type="file" multiple required><b>Select IDAT, manifest, cluster, and sample files</b><small>Multiple files accepted. Nothing is uploaded until you dispense the run.</small></label></div></section>
+<section class="chamber"><span class="chamber__number">02</span><div><p class="eyebrow">DISPENSE</p><h2>Launch local analysis</h2><p class="hint">The workflow validates channels, calls variants, and enriches eligible calls.</p><button class="dispense" type="submit">Run CNV analysis <b>→</b></button><p class="error" data-error hidden></p></div></section>
+<section class="chamber results"><span class="chamber__number">03</span><div><p class="eyebrow">OUTPUT TRAY</p><h2>Run receipt</h2><pre class="result-box" data-result>Waiting for a sample bundle.</pre></div></section>
+</form>{% endblock %}

@@ -2,6 +2,10 @@
 
 from .annotation import annotate_result
 from .calling import build_calls
+from .disease_treatment import (
+    build_disease_treatment_nodes,
+    disease_treatment_enabled,
+)
 from .function_filter import function_filter_enabled, run_function_filter
 from .inputs import prepare_inputs
 
@@ -49,9 +53,15 @@ def run_pipeline(
         if function_filter_enabled(cfg)
         else None
     )
+    disease_treatment = (
+        build_disease_treatment_nodes(graph, cfg)
+        if disease_treatment_enabled(cfg)
+        else None
+    )
     return {
         "idat_pairs": pairs,
         "result_ids": results,
         "annotations": annotations,
         "function_filter": function_filter,
+        "disease_treatment": disease_treatment,
     }

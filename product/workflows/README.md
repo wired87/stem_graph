@@ -11,6 +11,9 @@ modules:
   `VARIANT_EFFECT`, `GENE`, and `PROTEIN` nodes.
 - `function_filter.py`: optionally collect Ensembl GO xrefs, build stable GO
   indices, align GO terms to configured functions, and produce the gene mask.
+- `disease_treatment.py`: create index-stable variant/PGx/drug nodes while
+  keeping pathogenicity, disease association, response direction, target
+  direction and drug mechanism as separate evidence concepts.
 - `pipeline.py`: compose the three workflow groups without implementing domain
   behavior.
 
@@ -54,6 +57,24 @@ cfg = {
 graph = StemGraph(cfg=cfg)
 graph.main(files)
 ```
+
+Optional disease/treatment configuration:
+
+```python
+cfg["treatment"] = {
+    "enabled": True,
+    "pharmacogenetic_entries": [...],
+    "mechanism_entries": [...],
+    # Required to enable opposite-mechanism inference. Do not set this for
+    # ordinary PGx response directionality:
+    "direction_semantics": "target_activity",
+}
+```
+
+This creates `harmful_variation`, `variant_dir`, `DRUGIDS`,
+`VAR_DRUG_IDS`, and `VAR_TREATMENT_DRUG_IDS`. Unknown or conflicting
+directions remain `None`. A treatment candidate additionally requires explicit
+disease-associated pathogenic evidence and matching variant/drug target IDs.
 
 The filter creates four index-stable nodes:
 

@@ -16,8 +16,15 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import include, path
+from cnvmaster import views
 
 urlpatterns = [
+    path('favicon.ico', views.favicon, name='favicon'),
+    path('', views.home, name='home'),
+    path('workspace/cnv/', views.cnv_workspace, name='cnv-workspace'),
+    path('workspace/go/', views.go_workspace, name='go-workspace'),
+    path('workspace/files/', views.file_workspace, name='file-workspace'),
+    path('workspace/compute/', views.compute_workspace, name='compute-workspace'),
     path('admin/', admin.site.urls),
     # Product section API routes
     path('api/product/', include('product.urls')),
@@ -27,4 +34,6 @@ urlpatterns = [
     path('api/infrastructure/', include('infrastructure.urls')),
     # User section API routes
     path('api/user/', include('user.urls')),
+    path('protein/', include('protein.urls')),
+    path('drug/', include('drug_master.urls')),
 ]

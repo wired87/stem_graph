@@ -1,0 +1,20 @@
+<section class="panel">
+  <div class="panel__number">01</div>
+  <div class="panel__body">
+    <p class="eyebrow">PROTEIN INPUT</p>
+    <h2>Define UniProt accessions</h2>
+    <label class="field">
+      <span>One accession per line or comma separated</span>
+      <textarea id="accessions" rows="9">{{ default_proteins }}</textarea>
+    </label>
+    <label class="field">
+      <span>Sex stratum (metadata only)</span>
+      <select id="sex">
+        <option value="">Not supplied</option>
+        <option value="female">Female</option>
+        <option value="male">Male</option>
+        <option value="intersex">Intersex</option>
+      </select>
+    </label>
+  </div>
+</section>

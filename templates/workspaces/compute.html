@@ -1,0 +1,7 @@
+{% extends "base.html" %}{% block title %}Compute Control · CNVMaster{% endblock %}
+{% block content %}{% include "workspaces/_header.html" with eyebrow="INFRASTRUCTURE · WORKER CONTROL" heading="Wake. Observe. Rest." lede="A minimal control surface for the analysis worker." %}
+<div class="vending-workflow">
+<section class="chamber"><span class="chamber__number">01</span><div><p class="eyebrow">WORKER STATE</p><h2>Choose a machine action</h2><div class="button-row"><form class="js-api-form" data-endpoint="{% url 'infrastructure-machine-on' %}">{% csrf_token %}<button class="dispense" type="submit">Start worker <b>↑</b></button></form><form class="js-api-form" data-endpoint="{% url 'infrastructure-machine-off' %}">{% csrf_token %}<button class="secondary danger" type="submit">Stop worker</button></form></div></div></section>
+<section class="chamber"><span class="chamber__number">02</span><div><p class="eyebrow">SAFETY</p><h2>Controlled state changes</h2><p class="hint">Stopping the worker does not delete stored samples or analysis artifacts.</p></div></section>
+<section class="chamber results"><span class="chamber__number">03</span><div><p class="eyebrow">OUTPUT TRAY</p><h2>Machine receipt</h2><pre class="result-box" data-global-result>No state change requested.</pre></div></section>
+</div>{% endblock %}

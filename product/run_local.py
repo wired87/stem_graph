@@ -9,6 +9,7 @@ from firegraph.graph import GUtils
 from product.workflows.annotation import annotate_result
 from product.workflows.calling import build_calls, find_call
 from product.workflows.function_filter import run_function_filter
+from product.workflows.disease_treatment import build_disease_treatment_nodes
 from product.workflows.inputs import collect_files, prepare_inputs
 from product.workflows.pipeline import run_pipeline
 
@@ -67,6 +68,10 @@ class StemGraph(GUtils):
     # Workflow group 4: GO-term based functional gene filtering.
     def function_filter_workflow(self, cfg=None, **options):
         return run_function_filter(self, cfg or self.cfg, **options)
+
+    # Workflow group 5: evidence-preserving disease/treatment candidates.
+    def disease_treatment_workflow(self, cfg=None):
+        return build_disease_treatment_nodes(self, cfg or self.cfg)
 
     # Read API delegated to the calling application.
     def get_call(self, index, sample_id=None):

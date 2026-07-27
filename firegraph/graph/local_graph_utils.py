@@ -12,7 +12,6 @@ import networkx as nx
 import numpy as np
 
 from firegraph.utils.serialize_complex import check_serialize_dict
-from firegraph.graph.visual import create_g_visual
 from firegraph.utils.manipulator import Manipulator
 from firegraph.graph.utils import Utils
 
@@ -995,6 +994,8 @@ class GUtils(Utils):
         return edges
 
     def create_html(self):
+        from firegraph.graph.visual import create_g_visual
+
         save_path = os.path.join(
             self.file_store.name,
             "graph.html",
@@ -1051,4 +1052,3 @@ class GUtils(Utils):
                 return {
                     "id": nid,
                     **{k: v for k, v in attrs.items() if k != "id"}}
-

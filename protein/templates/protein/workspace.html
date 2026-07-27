@@ -1,0 +1,29 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ProteinMaster · Research Terminal</title>
+  <link rel="stylesheet" href="{% static 'protein/workspace.css' %}">
+</head>
+<body>
+  <main class="terminal">
+    {% include "protein/components/header.html" %}
+
+    <form id="protein-form" data-endpoint="{% url 'protein_predictor:predict' %}">
+      {% csrf_token %}
+      {% include "protein/components/tissue_panel.html" %}
+      {% include "protein/components/query_panel.html" %}
+    </form>
+
+    {% include "protein/components/results_panel.html" %}
+
+    <footer>
+      <span>Adapted from wired87/ProteinMasterGui</span>
+      <span>Powered by CNVMaster protein.workflow</span>
+    </footer>
+  </main>
+  <script src="{% static 'protein/workspace.js' %}" defer></script>
+</body>
+</html>

@@ -1,0 +1,30 @@
+@import url("../protein/workspace.css");
+
+textarea {
+  width: 100%;
+  resize: vertical;
+  border: 1px solid #283e50;
+  padding: 13px 14px;
+  color: var(--text);
+  background: var(--panel-deep);
+  outline: none;
+  font: 13px/1.45 ui-monospace, monospace;
+}
+textarea:focus { border-color: var(--cyan); box-shadow: 0 0 0 3px rgba(0,232,255,.08); }
+.workspace-nav { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
+.workspace-nav a {
+  border: 1px solid var(--rule); padding: 7px 10px;
+  color: var(--muted); text-decoration: none; font: 700 11px ui-monospace, monospace;
+}
+.workspace-nav a:hover, .workspace-nav a.is-active { border-color: var(--cyan); color: var(--cyan); }
+.metric-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 22px 0; }
+.metric { border: 1px solid var(--rule); padding: 14px; background: var(--panel-deep); }
+.metric b { display: block; color: var(--cyan); font-size: 1.6rem; }
+.metric span { color: var(--muted); font: 11px ui-monospace, monospace; }
+.clinical-warning { padding: 12px; color: #ffe6a6; border-left: 3px solid #ffc857; background: rgba(255,200,87,.08); }
+.table-wrap { overflow: auto; margin-top: 18px; }
+table { width: 100%; border-collapse: collapse; font: 12px ui-monospace, monospace; }
+th, td { border: 1px solid #203747; padding: 10px; text-align: right; white-space: nowrap; }
+th:first-child, td:first-child { position: sticky; left: 0; text-align: left; background: var(--panel-deep); }
+th { color: var(--cyan); background: #0a1420; }
+@media (max-width: 680px) { .metric-grid { grid-template-columns: repeat(2, 1fr); } }

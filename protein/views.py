@@ -1,5 +1,6 @@
 import asyncio
 
+from django.shortcuts import render
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -36,15 +37,28 @@ def filter_protein_entries(g: GUtils):
         rec_name = protein_desc.get("recommendedName", {}) or {}
         full_name = rec_name.get("fullName", {}) or {}
         new_attrs["description"] = full_name.get("value", "unknown")
-        new_attrs["gene"] = attrs["genes"][0]["geneName"]["value"]
+        genes = attrs.get("genes", []) or []
+        first_gene = genes[0] if isinstance(genes, list) and genes else {}
+        new_attrs["gene"] = (
+            (first_gene.get("geneName", {}) or {}).get("value")
+            if isinstance(first_gene, dict)
+            else None
+        ) or "unknown"
         comments = attrs.get("comments", []) or []
         first_comment = comments[0] if isinstance(comments, list) and comments else {}
         texts = first_comment.get("texts", []) or []
         first_text = texts[0] if isinstance(texts, list) and texts else {}
         new_attrs["text"] = first_text.get("value", "unknown")
         new_attrs["id"] = nid
+        new_attrs["score"] = attrs.get("protein_score", 0)
+        new_attrs["evidence"] = attrs.get("evidence", {})
         filtered.append(new_attrs)
-    return filtered
+    return sorted(filtered, key=lambda item: item["score"], reverse=True)
+
+
+def protein_workspace(request):
+    """Interactive Django template adapted from ProteinMasterGui."""
+    return render(request, "protein/workspace.html", {"theme": "protein"})
 
 class ProteinPredictor(APIView):
 

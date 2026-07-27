@@ -1,0 +1,23 @@
+<section class="panel results" id="results">
+  <div class="panel__number">03</div>
+  <div class="panel__body">
+    <div class="results__header">
+      <div>
+        <p class="eyebrow">GRAPH OUTPUT</p>
+        <h2>Drugs and ingredient matrix</h2>
+      </div>
+      <button type="button" class="secondary" id="download-button" disabled>Download full graph</button>
+    </div>
+    <div class="empty-state" id="empty-state">Run the workflow to populate the research graph.</div>
+    <div id="result-content" hidden>
+      <div class="metric-grid" id="metric-grid"></div>
+      <p class="clinical-warning" id="clinical-warning"></p>
+      <div class="table-wrap">
+        <table>
+          <thead id="matrix-head"></thead>
+          <tbody id="matrix-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>

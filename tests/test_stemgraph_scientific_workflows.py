@@ -1,0 +1,140 @@
+import unittest
+
+import networkx as nx
+import numpy as np
+
+from product.workflows.disease_treatment import build_disease_treatment_nodes
+from product.workflows.function_filter import run_function_filter
+
+
+class Graph:
+    def __init__(self):
+        self.G = nx.Graph()
+
+    def add_node(self, attrs):
+        node_id = attrs["id"]
+        self.G.add_node(node_id, **attrs)
+
+    def add_edge(self, source, target, attrs):
+        self.G.add_edge(source, target, **attrs)
+
+    def update_node(self, attrs):
+        self.G.nodes[attrs["id"]].update(attrs)
+
+    def get_node(self, node_id):
+        return self.G.nodes[node_id]
+
+
+class ScientificWorkflowTests(unittest.TestCase):
+    def test_go_indices_gene_order_and_unlabelled_terms(self):
+        graph = Graph()
+        graph.add_node({
+            "id": "ENSG2", "type": "GENE",
+            "xrefs": [{"primary_id": "GO:0000002", "description": "axon transport"}],
+        })
+        graph.add_node({
+            "id": "ENSG1", "type": "GENE",
+            "xrefs": [{"primary_id": "GO:0000001"}],
+        })
+
+        def embed(values):
+            return np.asarray([
+                [1.0, 0.0] if value in {"axon transport", "transport"} else [0.0, 1.0]
+                for value in values
+            ])
+
+        mask = run_function_filter(
+            graph,
+            {"protein": {
+                "functional_annotation": ["transport"],
+                "function_similarity_threshold": 0.9,
+                "fetch_go_xrefs": False,
+            }},
+            embed_batch_fn=embed,
+        )
+        self.assertEqual(graph.get_node("gene_to_goterm")["genes"], ["ENSG2", "ENSG1"])
+        self.assertEqual(graph.get_node("goterm")["index_by_id"], {
+            "GO:0000001": 0, "GO:0000002": 1,
+        })
+        self.assertEqual(mask, [0, None])
+        self.assertEqual(
+            graph.get_node("goterm_function_alignment")["unlabelled_goterm_indices"],
+            [0],
+        )
+
+    def test_treatment_requires_pathogenicity_target_and_curated_semantics(self):
+        graph = Graph()
+        graph.add_node({
+            "id": "VAR1", "type": "VARIANT",
+            "annotation": {
+                "clin_sig": ["pathogenic"], "disease": "D",
+                "gene_id": "ENSG1",
+            },
+        })
+        config = {"treatment": {
+            "pharmacogenetic_entries": [{
+                "variantId": "VAR1", "directionality": "INCREASE",
+                "drugs": [{"drugId": "CHEMBL1"}],
+            }],
+            "mechanism_entries": [{
+                "chemblIds": ["CHEMBL1"], "targets": ["ENSG1"],
+                "actionType": "INHIBITOR",
+            }],
+        }}
+        self.assertEqual(build_disease_treatment_nodes(graph, config), [[]])
+        self.assertFalse(
+            graph.G.nodes["VAR_TREATMENT_DRUG_IDS"]["inference_allowed"]
+        )
+
+        config["treatment"]["direction_semantics"] = "target_activity"
+        self.assertEqual(build_disease_treatment_nodes(graph, config), [[0]])
+        self.assertEqual(graph.G.nodes["variant_dir"]["data"], [0])
+        self.assertEqual(graph.G.nodes["DRUGIDS"]["data"], ["CHEMBL1"])
+
+    def test_conflicting_direction_is_unknown(self):
+        graph = Graph()
+        graph.add_node({
+            "id": "VAR1", "type": "VARIANT",
+            "annotation": {"clin_sig": ["pathogenic"], "disease": "D"},
+        })
+        build_disease_treatment_nodes(graph, {"treatment": {
+            "direction_semantics": "target_activity",
+            "pharmacogenetic_entries": [
+                {"variantId": "VAR1", "directionality": "INCREASE"},
+                {"variantId": "VAR1", "directionality": "DECREASE"},
+            ],
+        }})
+        self.assertEqual(graph.G.nodes["variant_dir"]["data"], [None])
+
+    def test_vep_colocated_clinvar_and_snake_case_mechanism(self):
+        graph = Graph()
+        graph.add_node({
+            "id": "VAR1", "type": "VARIANT",
+            "annotation": {
+                "most_severe_consequence": "missense_variant",
+                "colocated_variants": [{
+                    "clin_sig": ["pathogenic"],
+                    "phenotype_or_disease": 1,
+                }],
+                "gene_id": "ENSG1",
+            },
+        })
+        accepted = build_disease_treatment_nodes(graph, {"treatment": {
+            "direction_semantics": "target_activity",
+            "pharmacogenetic_entries": [{
+                "variantId": "VAR1",
+                "directionality": "INCREASE",
+                "drugs": [{"drugId": "CHEMBL1"}],
+            }],
+            "mechanism_entries": [{
+                "molecule_chembl_id": "CHEMBL1",
+                "targetId": "ENSG1",
+                "action_type": "INHIBITOR",
+            }],
+        }})
+        self.assertEqual(graph.G.nodes["harmful_variation"]["data"], [0])
+        self.assertEqual(accepted, [[0]])
+
+
+if __name__ == "__main__":
+    unittest.main()
