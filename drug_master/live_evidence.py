@@ -141,6 +141,18 @@ def _best_activity(molecule_id: str, target_id: str) -> dict | None:
     return min(candidates, key=lambda item: item[0])[1] if candidates else None
 
 
+def _molecule_structure(molecule_id: str) -> dict:
+    payload = _get_json(f"{CHEMBL}/molecule/{molecule_id}.json", {})
+    structures = payload.get("molecule_structures") or {}
+    return {
+        "pref_name": payload.get("pref_name"),
+        "canonical_smiles": structures.get("canonical_smiles"),
+        "standard_inchi": structures.get("standard_inchi"),
+        "standard_inchi_key": structures.get("standard_inchi_key"),
+        "molfile": structures.get("molfile"),
+    }
+
+
 def fetch_candidates_for_target(target_id: str) -> tuple[str, list[dict]]:
     payload = _get_json(
         f"{CHEMBL}/mechanism.json",
@@ -161,7 +173,13 @@ def fetch_candidates_for_target(target_id: str) -> tuple[str, list[dict]]:
             continue
         if not activity:
             continue
+        try:
+            structure = _molecule_structure(molecule_id)
+        except Exception as exc:
+            print(f"ChEMBL structure lookup failed for {molecule_id}: {exc}")
+            structure = {}
         candidates.append({
+            **structure,
             "molecule_chembl_id": molecule_id,
             "target_chembl_id": target_id,
             "mechanism": action.lower(),

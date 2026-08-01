@@ -1,0 +1,7 @@
+<form id="drug-form" action="{% url 'drug_master:run' %}" method="post"
+      enctype="multipart/form-data" data-endpoint="{% url 'drug_master:run' %}">
+  {% csrf_token %}
+  {% if form.errors %}<div class="error" role="alert">{{ form.errors }}</div>{% endif %}
+  {% include "drug_master/components/input_panel.html" %}
+  {% include "drug_master/components/variant_panel.html" %}
+</form>

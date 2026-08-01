@@ -3,7 +3,6 @@ from embedder import embed
 import pandas as pd
 
 import functools
-import obonet
 import networkx as nx
 import re
 
@@ -164,6 +163,8 @@ async def fetch_uniprot_tissue_vocabulary() -> list[str]:
 
 @functools.lru_cache(maxsize=1)
 def fetch_uberon_layer(g) -> nx.MultiGraph:
+    import obonet
+
     obo_graph = obonet.read_obo(_UBERON_URL)
 
     for node_id, data in obo_graph.nodes(data=True):
@@ -245,7 +246,6 @@ def connect_uniprot_to_uberon(g) -> None:
                     attrs={"rel": "ontology_partial_match", "src_layer": "TISSUE", "trgt_layer": "UBERON_TERM"}
                 )
                 break
-
 
 
 

@@ -1,0 +1,27 @@
+{% extends "base.html" %}{% load static %}
+{% block title %}Workflow Studio · CNVMaster{% endblock %}
+{% block head %}<link rel="stylesheet" href="{% static 'workflow/index.css' %}">{% endblock %}
+{% block content %}
+<section class="workflow-intro">
+  <p class="eyebrow">ONE SCREEN · TWO RESEARCH FLOWS</p>
+  <h1>Build the evidence path,<br><em>step by step.</em></h1>
+  <p>Choose a workflow. Each stage exposes only the inputs accepted by its backend route.</p>
+</section>
+
+{% include "workflows/_research_badges.html" %}
+
+<div class="workflow-tabs" role="tablist" aria-label="Available workflows">
+  <button id="tab-protein-drug" role="tab" aria-selected="true"
+          aria-controls="panel-protein-drug" data-workflow-tab="protein-drug">
+    <span>01</span> Protein → Drugs
+  </button>
+  <button id="tab-stemcnv" role="tab" aria-selected="false"
+          aria-controls="panel-stemcnv" data-workflow-tab="stemcnv" tabindex="-1">
+    <span>02</span> StemCNV graph
+  </button>
+</div>
+
+{% include "workflows/protein_drug.html" %}
+{% include "workflows/stemcnv.html" %}
+{% endblock %}
+{% block scripts %}<script src="{% static 'workflow/index.js' %}" defer></script>{% endblock %}

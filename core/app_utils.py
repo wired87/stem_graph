@@ -26,6 +26,7 @@ import logging
 from typing import Any, ClassVar
 import httpx
 
+from _db import get_db_manager
 from firegraph._db import DBManager
 
 _UNIPROT_SEARCH = "https://rest.uniprot.org/uniprotkb/search"
@@ -53,7 +54,7 @@ CLIENT = httpx.AsyncClient(
 
 _logger = logging.getLogger(__name__)
 
-DB = DBManager()
+DB = get_db_manager()
 
 
 class AsyncApiFetcher:

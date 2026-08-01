@@ -37,7 +37,7 @@ def load_go_term_library(g, function_embeddings) -> list[str]:
             attrs={"id":item, "type": "GO_TERM"}
         )
 
-    # delete goterms left
+    #
     goterms = [
         nid for nid, attrs in g.G.nodes(data=True) if attrs.get("type") == "GO_TERM"
     ]

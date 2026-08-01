@@ -15,8 +15,15 @@ from pathlib import Path
 _BASE_DIR = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(_BASE_DIR / "user"))
 
-from django.core.asgi import get_asgi_application
-
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'cnvmaster.settings')
 
-application = get_asgi_application()
+from django.conf import settings
+from django.contrib.staticfiles.handlers import ASGIStaticFilesHandler
+from django.core.asgi import get_asgi_application
+
+django_application = get_asgi_application()
+application = (
+    ASGIStaticFilesHandler(django_application)
+    if settings.DEBUG
+    else django_application
+)

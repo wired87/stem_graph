@@ -1,26 +1,11 @@
 {% load static %}
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
+<!doctype html><html lang="en"><head><meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>CNVMaster · Precision Drug Workspace</title>
-  <link rel="stylesheet" href="{% static 'drug_master/workspace.css' %}">
-</head>
-<body>
-  <main class="terminal">
-    {% include "drug_master/components/header.html" %}
-    <form id="drug-form" data-endpoint="{% url 'drug_master:run' %}">
-      {% csrf_token %}
-      {% include "drug_master/components/input_panel.html" %}
-      {% include "drug_master/components/variant_panel.html" %}
-    </form>
-    {% include "drug_master/components/results_panel.html" %}
-    <footer>
-      <span>CNVMaster unified research workflow</span>
-      <span>ChEMBL · OmniPath · VEP-compatible input</span>
-    </footer>
-  </main>
-  <script src="{% static 'drug_master/workspace.js' %}" defer></script>
-</body>
-</html>
+  <link rel="stylesheet" href="{% static 'drug_master/workspace.css' %}"></head>
+<body><main class="terminal">
+  {% include "drug_master/components/header.html" %}
+  {% include "drug_master/components/precision_drug/precision_drug.html" %}
+  {% include "drug_master/components/results_panel.html" %}
+  <footer><span>CNVMaster unified research workflow</span><span>ChEMBL · OmniPath · VEP-compatible input</span></footer>
+</main><script src="{% static 'drug_master/workspace.js' %}" defer></script></body></html>

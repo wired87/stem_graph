@@ -3,9 +3,10 @@
   if (!form) return;
 
   const chips = [...document.querySelectorAll("[data-value]")];
+  const tissue = form.elements.namedItem("tissue");
   const customTissue = document.querySelector("#custom-tissue");
-  const annotation = document.querySelector("#functional-annotation");
-  const proteinType = document.querySelector("#protein-type");
+  const annotation = form.elements.namedItem("functional_annotation");
+  const proteinType = form.elements.namedItem("protein_type");
   const button = document.querySelector("#run-button");
   const status = document.querySelector("#system-status");
   const error = document.querySelector("#error-message");
@@ -13,6 +14,7 @@
   const summary = document.querySelector("#result-summary");
   const list = document.querySelector("#protein-list");
   const download = document.querySelector("#download-button");
+  const aumDownload = document.querySelector("#aum-download");
   let selectedTissue = "Thalamus";
   let lastPayload = null;
 
@@ -24,12 +26,19 @@
     chips.forEach((item) => item.classList.remove("is-selected"));
     chip.classList.add("is-selected");
     selectedTissue = chip.dataset.value;
+    tissue.value = selectedTissue;
     customTissue.value = "";
   }));
   customTissue.addEventListener("input", () => {
     if (customTissue.value.trim()) {
       chips.forEach((item) => item.classList.remove("is-selected"));
       selectedTissue = customTissue.value.trim();
+      tissue.value = selectedTissue;
+    } else {
+      const fallback = chips[0];
+      fallback.classList.add("is-selected");
+      selectedTissue = fallback.dataset.value;
+      tissue.value = selectedTissue;
     }
   });
 
@@ -56,7 +65,7 @@
     status.className = "status is-running";
     status.innerHTML = "<span></span> Synthesizing";
     const body = {
-      tissue: customTissue.value.trim() || selectedTissue,
+      tissue: tissue.value,
       functional_annotation: annotation.value.trim(),
       protein_type: proteinType.value,
     };
@@ -74,6 +83,10 @@
       if (!response.ok || data.error) throw new Error(data.error || `Request failed (${response.status})`);
       const proteins = Array.isArray(data.proteins) ? data.proteins : [];
       lastPayload = { query: body, proteins };
+      if (data.aum_pdf?.url) {
+        aumDownload.href = data.aum_pdf.url;
+        aumDownload.hidden = false;
+      }
       empty.hidden = true;
       summary.hidden = false;
       summary.textContent = `${proteins.length} candidates · ${body.tissue || "all tissues"} · ${body.protein_type || "all classes"}`;

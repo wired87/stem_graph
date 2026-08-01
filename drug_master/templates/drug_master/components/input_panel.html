@@ -5,11 +5,13 @@
     <h2>Define UniProt accessions</h2>
     <label class="field">
       <span>One accession per line or comma separated</span>
-      <textarea id="accessions" rows="9">{{ default_proteins }}</textarea>
+      <textarea id="accessions" name="accessions" rows="9"
+                aria-describedby="accessions-help">{{ default_proteins }}</textarea>
+      <small id="accessions-help">Accepted by the API as text or a JSON list; maximum 50 accessions.</small>
     </label>
     <label class="field">
       <span>Sex stratum (metadata only)</span>
-      <select id="sex">
+      <select id="sex" name="sex">
         <option value="">Not supplied</option>
         <option value="female">Female</option>
         <option value="male">Male</option>

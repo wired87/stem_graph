@@ -1,0 +1,22 @@
+<section id="panel-stemcnv" class="workflow-panel workflow-panel--cream" role="tabpanel"
+         aria-labelledby="tab-stemcnv" data-workflow-panel="stemcnv" hidden>
+  <header><p class="eyebrow">ARRAY EVIDENCE TO STEMGRAPH</p><h2>Build the graph.</h2></header>
+  <form id="stemcnv-step" method="post" enctype="multipart/form-data" data-endpoint="{% url 'run-local' %}">
+    {% csrf_token %}
+    {% if form.errors %}<div class="workflow-error" role="alert">{{ form.errors }}</div>{% endif %}
+    <div class="step-grid">
+      <section class="workflow-step"><span class="step-number">01</span><h3>Load one complete array bundle</h3>
+        <label class="file-drop"><input name="files" type="file" multiple required accept=".idat,.bpm,.egt,.csv,.tsv,.txt,.yaml,.yml">
+          <b>Select IDAT pairs and BPM, EGT, CSV references</b></label></section>
+      <section class="workflow-step"><span class="step-number">02</span><h3>Configure graph enrichment</h3>
+        <label class="inline-check"><input name="annotate_variants" type="checkbox" value="true"><span>Annotate eligible variants</span></label>
+        <label><span>Functional annotations</span><textarea name="functional_annotation" rows="3"></textarea></label>
+        <label><span>Function similarity threshold</span><input name="function_similarity_threshold" type="number" value="0.75" min="0" max="1" step="0.01"></label>
+        <button type="submit">Build StemCNV graph <b>→</b></button><p class="workflow-error" data-error hidden></p>
+      </section>
+    </div>
+  </form>
+  <section class="workflow-output"><div><h3>Backend response</h3></div><div>
+    <div class="stem-graph-table" data-stemcnv-table hidden></div><pre data-stemcnv-result>Waiting for a complete file bundle.</pre>
+  </div></section>
+</section>

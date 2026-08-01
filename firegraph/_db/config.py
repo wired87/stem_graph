@@ -11,12 +11,14 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
+from cnvmaster.settings import BASE_DIR
+
 _DEFAULT_DUCK_PATH = str(Path(__file__).resolve().parent.parent / "local.duckdb")
 
 
 def duck_db_path() -> str:
     """Single canonical path for all processes (prod, test, CLI)."""
-    return "local.duckdb"
+    return BASE_DIR / "local.duckdb"
 
 
 def duck_db_verbose() -> int:

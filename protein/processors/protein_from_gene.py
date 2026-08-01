@@ -2,7 +2,11 @@ import sys
 import json
 from pathlib import Path
 
-from protein import UniProtSearchFetcher
+try:
+    from protein import UniProtSearchFetcher
+except ImportError:
+    UniProtSearchFetcher = None
+    from protein.processors.get_single_protein import _UNIPROT_FETCHER
 
 for _p in Path(__file__).resolve().parents:
     if (_p / "core").is_dir() and (_p / "embedder").is_dir():
@@ -14,7 +18,8 @@ for _p in Path(__file__).resolve().parents:
 
 _UNIPROT_TISSUE_MIN_SCORE = 0.75
 
-_UNIPROT_FETCHER = UniProtSearchFetcher()
+if UniProtSearchFetcher is not None:
+    _UNIPROT_FETCHER = UniProtSearchFetcher()
 def _gene_value(attrs):
     return (
         attrs.get("symbol")
@@ -144,6 +149,32 @@ def build_uniprot_queries(
     return queries
 
 
+def build_relaxed_uniprot_query(
+    genes: list[str],
+    keywords: list[str],
+    organs: list[str],
+    goterms: list[str],
+) -> str:
+    clauses = ["organism_id:9606"]
+    clauses.extend(
+        f"gene_exact:{g}" if not str(g).startswith("ENSG") else f"xref:Ensembl-{g}"
+        for g in sorted({str(item).strip() for item in genes if item})
+    )
+    clauses.extend(
+        f"keyword:{kw}" if str(kw).startswith("KW-") else f'keyword:"{kw}"'
+        for kw in sorted({str(item).strip() for item in keywords if item})
+    )
+    clauses.extend(
+        f'tissue:"{item}"'
+        for item in sorted({str(item).strip() for item in organs if item})
+    )
+    clauses.extend(
+        f'go:"{str(item).strip().replace("_", ":")}"'
+        for item in sorted({str(item).strip() for item in goterms if item})
+    )
+    return " OR ".join(clauses)
+
+
 async def fetch_uniprot_protein(g):
     # Extract nodes
     genes = [
@@ -183,6 +214,8 @@ async def fetch_uniprot_protein(g):
     all_protein_rows = []
     seen_accessions = set()
 
+    retrieval_strategy = "strict"
+
     # Execute batch queries sequentially
     for i, q in enumerate(queries, 1):
         print(f"Executing Query [{i}/{len(queries)}]: {q}...")
@@ -191,6 +224,20 @@ async def fetch_uniprot_protein(g):
             results.get("results", []) if isinstance(results, dict) else []
         )
 
+        for protein in protein_rows:
+            accession = protein.get("primaryAccession")
+            if accession and accession not in seen_accessions:
+                seen_accessions.add(accession)
+                all_protein_rows.append(protein)
+
+    if not all_protein_rows and any([genes, keywords, organs, goterms]):
+        retrieval_strategy = "relaxed"
+        q = build_relaxed_uniprot_query(genes, keywords, organs, goterms)
+        print(f"Executing relaxed Query: {q}...")
+        results = await _UNIPROT_FETCHER.search(query=q)
+        protein_rows = (
+            results.get("results", []) if isinstance(results, dict) else []
+        )
         for protein in protein_rows:
             accession = protein.get("primaryAccession")
             if accession and accession not in seen_accessions:
@@ -214,10 +261,11 @@ async def fetch_uniprot_protein(g):
                 **protein,
                 evidence=matched,
                 protein_score=score,
-                retrieval_strategy="batched",
+                retrieval_strategy=retrieval_strategy,
                 embed_key="proteinDescription__recommendedName__fullName__value",
             )
         )
+
 
         #
 
@@ -229,9 +277,10 @@ async def fetch_uniprot_protein(g):
                     attrs=dict(rel="encodes", src_layer="GENE", trgt_layer="PROTEIN"),
                 )
         for go_id in matched["goterms"]:
-            if g.G.has_node(go_id):
+            graph_go_id = go_id if g.G.has_node(go_id) else f"GO:{go_id}"
+            if g.G.has_node(graph_go_id):
                 g.add_edge(
-                    src=go_id, trgt=accession,
+                    src=graph_go_id, trgt=accession,
                     attrs=dict(rel="supports", src_layer="GO_TERM", trgt_layer="PROTEIN"),
                 )
 
@@ -270,4 +319,5 @@ async def fetch_uniprot_protein(g):
         "input_keyword_count": len(keywords),
         "input_tissue_count": len(organs),
         "input_goterm_count": len(goterms),
+        "retrieval_strategy": retrieval_strategy,
     }

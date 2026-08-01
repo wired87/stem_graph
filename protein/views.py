@@ -1,10 +1,16 @@
 import asyncio
+import mimetypes
+from pathlib import Path
+from tempfile import TemporaryDirectory
 
+from django.http import FileResponse, Http404
 from django.shortcuts import render
+from django.urls import reverse
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from firegraph.graph.local_graph_utils import GUtils
+from protein.artifacts import artifact_path, create_aum_pdf, register_export
 from protein.workflow import predict_proteins
 
 
@@ -89,11 +95,44 @@ class ProteinPredictor(APIView):
 
             proteins = filter_protein_entries(g)
 
+            response_object = dict(proteins=proteins)
+            temp_store = TemporaryDirectory(prefix="cnvmaster-protein-export-")
+            pdf_path = Path(temp_store.name) / "aum.pdf"
+            fingerprint = create_aum_pdf(pdf_path, response_object)
+            export_id = register_export(temp_store)
+            pdf_url = request.build_absolute_uri(reverse(
+                "protein_predictor:aum_pdf",
+                kwargs={"export_id": export_id},
+            ))
             g.G = None
             print("return porteins:", len(proteins))
-            return Response(
-                dict(proteins=proteins)
-            )
+            return Response({
+                **response_object,
+                "response_object": response_object,
+                "aum_pdf": {
+                    "filename": "aum.pdf",
+                    "url": pdf_url,
+                    "fingerprint": fingerprint,
+                    "algorithm": "SHA-256",
+                    "namespace": "botworld.cloud",
+                },
+            })
         except Exception as e:
             print("Error:", e)
             return Response(dict(error=str(e)))
+
+
+class ProteinAumDownload(APIView):
+    authentication_classes = []
+    permission_classes = []
+
+    def get(self, request, export_id: str):
+        path = artifact_path(export_id)
+        if path is None:
+            raise Http404("AUM artifact not found or expired.")
+        return FileResponse(
+            path.open("rb"),
+            content_type=mimetypes.guess_type(path.name)[0] or "application/pdf",
+            as_attachment=True,
+            filename=path.name,
+        )

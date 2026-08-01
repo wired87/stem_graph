@@ -129,7 +129,7 @@ async def uberon_to_uniprot_tissue(g):
                 trgt_layer="TISSUE",
             )
         )
-
+    #
     count = [nid for nid, attrs in g.G.nodes(data=True) if attrs.get("type") == "TISSUE" and attrs.get("sub_type") == "UNIPROT"]
     print("uniprot tissues extracted:", len(count), count, "\n... done")
 

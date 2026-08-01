@@ -3,8 +3,8 @@ from goterm.hierarchy import go_term_hierarchy
 from keywords.go_term import GoApiFetcher
 
 
-async def term_from_keywords(g):
-    print("term_from_keywords...")
+async def term_from_fun(g):
+    print("term_from_fun...")
     functions: list[tuple[str, dict]] = [
         (nid, attrs)
         for nid, attrs in g.G.nodes(data=True)
@@ -18,5 +18,5 @@ async def term_from_keywords(g):
     # todo get hierarchy
     fetcher = GoApiFetcher()
     await go_term_hierarchy(fetcher, g, gids)
-    print("term_from_keywords... done")
+    print("term_from_fun... done")
 

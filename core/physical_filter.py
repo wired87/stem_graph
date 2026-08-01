@@ -261,7 +261,7 @@ async def _fetch_organ_annotations(organs: list[str]) -> list[str]:
 
 
 def get_human_entries(prompt) -> dict[str, list[float]]:
-    db = DBManager()
+    db = get_db_manager()
 
     # check duck db status
     if db.row_count("PROTEIN") == 0:

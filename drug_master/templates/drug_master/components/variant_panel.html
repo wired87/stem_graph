@@ -5,7 +5,8 @@
     <h2>Add VEP-compatible annotations</h2>
     <label class="field">
       <span>JSON list (optional)</span>
-      <textarea id="vep-annotations" rows="7" placeholder='[{"id":"rs…","protein_id":"Q15822","impact":"HIGH","clin_sig":["pathogenic"],"disease":"…"}]'></textarea>
+      <textarea id="vep-annotations" name="vep_annotations" rows="7"
+                placeholder='[{"id":"rs…","protein_id":"Q15822","impact":"HIGH","clin_sig":["pathogenic"],"disease":"…"}]'></textarea>
       <small>Concrete patient variants are required for the harmful-variant decrease loop.</small>
     </label>
     <button class="run-button" id="run-button" type="submit">

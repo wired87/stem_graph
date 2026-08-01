@@ -1,4 +1,5 @@
-from protein.expression.validate_expression_data import validate_download_expression
+"""Protein expression helpers.
 
-# VALIDATE EXPRESSION FILES
-validate_download_expression()
+Expression datasets are loaded lazily by the workflow cache layer.  Importing
+this package must not trigger web downloads.
+"""

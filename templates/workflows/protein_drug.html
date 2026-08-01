@@ -1,0 +1,55 @@
+<section id="panel-protein-drug" class="workflow-panel workflow-panel--blue"
+         role="tabpanel" aria-labelledby="tab-protein-drug" data-workflow-panel="protein-drug">
+  <header>
+    <p class="eyebrow">PROTEOME TO THERAPEUTIC EVIDENCE</p>
+    <h2>Predict proteins, then resolve drug candidates.</h2>
+  </header>
+  <div class="step-grid">
+    <form id="protein-step" class="workflow-step"
+          data-endpoint="{% url 'protein_predictor:predict' %}">
+      {% csrf_token %}
+      <span class="step-number">01</span>
+      <p class="eyebrow">PROTEIN PREDICTION</p>
+      <h3>Define the biological context</h3>
+      <label><span>Tissue</span><input name="tissue" value="Thalamus" required></label>
+      <label><span>Functional annotation</span>
+        <input name="functional_annotation" value="synaptic transmission" required>
+      </label>
+      <label><span>Protein class</span>
+        <select name="protein_type">
+          <option value="">No restriction</option>
+          <option selected>Ion channel</option><option>Enzyme</option><option>Neuropeptide</option>
+        </select>
+      </label>
+      <button type="submit">Predict proteins <b>→</b></button>
+      <p class="workflow-error" data-error hidden></p>
+    </form>
+
+    <form id="drug-step" class="workflow-step is-locked"
+          data-endpoint="{% url 'drug_master:run' %}">
+      {% csrf_token %}
+      <span class="step-number">02</span>
+      <p class="eyebrow">GET DRUGS</p>
+      <h3>Use selected UniProt candidates</h3>
+      <div class="candidate-picker" data-protein-candidates>
+        Run step 01 to receive selectable proteins.
+      </div>
+      <label><span>Sex stratum</span>
+        <select name="sex"><option value="">Not supplied</option><option value="female">Female</option><option value="male">Male</option><option value="intersex">Intersex</option></select>
+      </label>
+      <label><span>VEP annotations (JSON list, optional)</span>
+        <textarea name="vep_annotations" rows="4" placeholder="[]"></textarea>
+      </label>
+      <button type="submit" disabled>Get drugs <b>→</b></button>
+      <p class="workflow-error" data-error hidden></p>
+    </form>
+  </div>
+  <section class="workflow-output">
+    <div><p class="eyebrow">RESULT</p><h3>Protein and ingredient evidence</h3></div>
+    <div>
+      <div class="artifact-links" data-protein-artifacts aria-label="Generated protein files"></div>
+      <div class="artifact-links" data-drug-artifacts aria-label="Generated workflow files"></div>
+      <pre data-protein-drug-result>Waiting for step 01.</pre>
+    </div>
+  </section>
+</section>

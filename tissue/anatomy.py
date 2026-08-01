@@ -49,7 +49,7 @@ async def get_uberon_anatomy_children(
                     try:
                         if term.get("is_obsolete"):
                             continue
-                        print("term", term)
+                        #print("term", term)
                         subsets = set(term.get("in_subset", []))
 
                         if "human_subset" not in subsets:

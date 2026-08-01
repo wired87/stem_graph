@@ -16,14 +16,7 @@
       <span class="brand__mark">C</span>
       <span><b>CNVMASTER</b><small>Discovery dispenser</small></span>
     </a>
-    <nav class="topnav" aria-label="Primary">
-      <a href="{% url 'cnv-workspace' %}">CNV</a>
-      <a href="{% url 'protein_predictor:workspace' %}">Protein</a>
-      <a href="{% url 'go-workspace' %}">GO terms</a>
-      <a href="{% url 'drug_master:workspace' %}">Drugs</a>
-      <a href="{% url 'file-workspace' %}">Files</a>
-      <a href="{% url 'compute-workspace' %}">Compute</a>
-    </nav>
+
     <div class="ready-light"><span></span> System ready</div>
   </header>
   <main class="shell">{% block content %}{% endblock %}</main>

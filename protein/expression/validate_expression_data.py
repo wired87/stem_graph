@@ -35,7 +35,7 @@ def validate_download_expression():
     protein_expression_urls = [
         # todo add more ntries
         "https://www.proteinatlas.org/download/tsv/rna_brain_region_hpa.tsv.zip",
-        f"https://www.proteinatlas.org/download/tsv/rna_brain_hpa.tsv.zip",
+        #f"https://www.proteinatlas.org/download/tsv/rna_brain_hpa.tsv.zip",
     ]
 
     for item in protein_expression_urls:

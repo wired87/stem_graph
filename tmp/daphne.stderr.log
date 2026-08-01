@@ -1,0 +1,7 @@
+2026-07-28 11:08:58,869 INFO     No device provided, using cpu
+2026-07-28 11:08:58,884 INFO     Loading SentenceTransformer model from sentence-transformers/all-MiniLM-L6-v2.
+Loading weights:   0%|          | 0/103 [00:00<?, ?it/s]Loading weights: 100%|##########| 103/103 [00:00<00:00, 3220.71it/s]
+2026-07-28 11:09:00,037 INFO     Starting server at tcp:port=8765:interface=127.0.0.1
+2026-07-28 11:09:00,037 INFO     HTTP/2 support not enabled (install the http2 and tls Twisted extras)
+2026-07-28 11:09:00,037 INFO     Configuring endpoint tcp:port=8765:interface=127.0.0.1
+2026-07-28 11:09:00,055 INFO     Listening on TCP address 127.0.0.1:8765

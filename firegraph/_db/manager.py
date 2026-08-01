@@ -9,7 +9,7 @@ import os
 import re
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
-from datetime import datetime
+
 
 import duckdb
 import numpy as np
@@ -31,7 +31,7 @@ except Exception:
 
 
 _db_mgr: Optional["DBManager"] = None
-
+import polars as pl
 
 def get_db_manager() -> "DBManager":
     global _db_mgr
@@ -56,15 +56,17 @@ class DBManager:
             db_log("info", "[duck] connect: ok", path=path)
             return con
         except Exception as e:
+            print("Err connecto to local db instance", e)
             msg = str(e).lower()
             if "being used by another process" in msg or "file is already open" in msg:
                 # On Windows, another process can hold an exclusive lock.
                 # Prefer read-only so we still read canonical data.
                 try:
-                    con = duckdb.connect(path, read_only=True)
+                    con = duckdb.connect(path)
                     db_log("warn", f"DuckDB file locked: {path}. Opened read_only.")
                     return con
-                except Exception:
+                except Exception as e:
+                    print("Err2 connect duckdb", e)
                     pass
                 # voita
                 # If read_only is also blocked, fall back to a per-process DB file.
@@ -193,7 +195,7 @@ class DBManager:
                 "embedding",
             ]
         )
-        print("entries[0]", type(entries[0]))
+        print("entries", len(entries), type(entries[0]))
         #
         embeddings = [np.asarray(ast.literal_eval(i[1])) for i in entries]
         print("embeddings[0]", type(embeddings[0]))
@@ -277,9 +279,8 @@ class DBManager:
     ):
         """
         Return rows of a table.
-
         If ids is provided:
-            WHERE id IN (...)
+        WHERE id IN (...)
         """
 
         query = f"SELECT {select} FROM {table_name}"
@@ -299,66 +300,94 @@ class DBManager:
             conv_to_dict=True,
         )
 
-    def insert(
-        self,
-        table: str,
-        rows: Union[Dict, List[Dict]],
-        upsert: bool = False,
-        conflict_columns: Optional[tuple] = None,
-        schema: Optional[Dict[str, str]] = None,
-    ) -> bool:
-        """
-        Insert rows into table. Optionally upsert on conflict.
 
-        Args:
-            table: Table name.
-            rows: Single dict or list of dicts.
-            upsert: If True, replace existing rows on conflict.
-            conflict_columns: Columns for conflict detection (default: ("id",)).
-            schema: Optional schema for create_if_not_exists; also used for type coercion.
+    def insert(
+            self,
+            table: str,
+            rows: Union[Dict, List[Dict]],
+            upsert: bool = False,
+            conflict_columns: Optional[tuple] = None,
+            schema: Optional[Dict[str, str]] = None,
+    ) -> bool:
+        """Inserts or upserts rows directly using DuckDB's internal JSON-SQL parser.
+
+        Zero Python loops, zero external libraries (PyArrow/Polars).
         """
-        db_log("info", "insert", table=table, rows=len(rows), upsert=upsert)
         if not isinstance(rows, list):
             rows = [rows]
 
         if not rows:
             return True
 
-        # fetch table schema
-        tbl_schema = self._duck_get_table_schema(
-            table, schema=schema
-        )
+        db_log("info", f"[duck] insert request: {table} with {len(rows)} rows")
 
+        try:
+            # 1. Konvertiere die gesamte Liste in EINEN einzigen JSON-String
+            json_data = json.dumps(rows)
+            db_log("info", "[duck] rows dumped")
 
-        print("results extracted...")
-        new_rows = []
-        for i, row in enumerate(rows):
-            print("work row", i)
-            new_row = {}
+            # 2. Spalten-Namen sicher & vollständig über DuckDB ermitteln (ohne LIMIT 1 Fallstrick)
+            # Wir parsen den JSON-String als temporäre Table und lesen deren Spalten aus
+            json_cols = [
+                row[0]
+                for row in self._con.execute(
+                    "SELECT column_name FROM (DESCRIBE SELECT * FROM read_json_auto(?))",
+                    [json_data],
+                ).fetchall()
+            ]
 
-            for col, val in row.items():
-                if not isinstance(val, (str, datetime)):
-                    if isinstance(val, bytes):
-                        val = val.decode("utf-8")
-                    val = json.dumps(val)
+            db_log("info", "[duck] schema fetched...")
 
-                new_row[col] = val
+            # Missing Columns in DuckDB anlegen
+            tbl_schema = self._duck_get_table_schema(table, schema=schema)
+            for col in set(json_cols) - set(tbl_schema):
+                self._duck_insert_col(table, col)
 
-                if col not in tbl_schema:
-                    self._duck_insert_col(table, col)
-            print("---")
-            new_rows.append(new_row)
+            db_log("info", "[duck] schema updated...")
 
-        ok = self._duck_insert(
-            table,
-            new_rows,
-            upsert=upsert,
-            conflict_columns=("id",) if upsert and conflict_columns is None else conflict_columns,
-        )
-        print("ok", ok)
-        if not ok:
-            db_log("error", "insert failed", table=table)
-        return ok
+            # 3. Dynamic SQL bauen
+            # Wir escapen Spaltennamen mit double-quotes ("col"), um SQL-Keywords-Fehler zu vermeiden
+            cols_sql = ", ".join(f'"{c}"' for c in json_cols)
+
+            if upsert:
+                c_cols = (
+                    ("id",)
+                    if conflict_columns is None
+                    else conflict_columns
+                )
+                conflict_cols_sql = ", ".join(f'"{c}"' for c in c_cols)
+                set_parts = [
+                    f'"{c}" = EXCLUDED."{c}"' for c in json_cols if c not in c_cols
+                ]
+
+                if set_parts:
+                    sql = f"""
+                        INSERT INTO "{table}" ({cols_sql})
+                        SELECT {cols_sql} FROM read_json_auto(?)
+                        ON CONFLICT ({conflict_cols_sql}) DO UPDATE SET {', '.join(set_parts)}
+                    """
+                else:
+                    sql = f"""
+                        INSERT OR REPLACE INTO "{table}" ({cols_sql})
+                        SELECT {cols_sql} FROM read_json_auto(?)
+                    """
+            else:
+                sql = f"""
+                    INSERT INTO "{table}" ({cols_sql})
+                    SELECT {cols_sql} FROM read_json_auto(?)
+                """
+
+            db_log("info", "[duck] sql generated")
+
+            # 4. Ausführen: DuckDB parst 'json_data' direkt in C++ aus dem Parameter
+            self._con.execute(sql, [json_data])
+
+            db_log("info", f"[duck] insert: ok {table} ({len(rows)} rows)")
+            return True
+
+        except Exception as e:
+            db_log("error", f"[duck] insert failed: {table}", error=str(e))
+            return False
 
     def del_entry(self, nid: str, table: str, user_id: str, name_id: str = "id") -> int:
         """
@@ -724,11 +753,6 @@ class DBManager:
 
 
 
-    @property
-    def connection(self):
-        return self._con
-
-
 def db_check() -> bool:
     """Standalone health check (uses singleton manager)."""
     return get_db_manager().check()
@@ -738,4 +762,6 @@ def db_status() -> dict:
     """Standalone status (uses singleton manager)."""
     return get_db_manager().status()
 
-
+if __name__  == "__main__":
+    mgr = get_db_manager()
+    mgr.showup("HPA")

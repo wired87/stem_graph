@@ -8,7 +8,7 @@ def favicon(request):
 
 
 def home(request):
-    return render(request, "home.html", {"theme": "home"})
+    return render(request, "index.html", {"theme": "workflow"})
 
 
 def cnv_workspace(request):

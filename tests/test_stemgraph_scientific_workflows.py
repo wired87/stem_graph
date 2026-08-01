@@ -5,6 +5,7 @@ import numpy as np
 
 from product.workflows.disease_treatment import build_disease_treatment_nodes
 from product.workflows.function_filter import run_function_filter
+from product.stem_graph_table import build_stem_graph_table
 
 
 class Graph:
@@ -134,6 +135,41 @@ class ScientificWorkflowTests(unittest.TestCase):
         }})
         self.assertEqual(graph.G.nodes["harmful_variation"]["data"], [0])
         self.assertEqual(accepted, [[0]])
+
+    def test_stem_graph_table_preserves_tdx_edges_and_case_legend(self):
+        graph = Graph()
+        graph.add_node({
+            "id": "result:0",
+            "type": "SCORE_RESULT",
+            "data": [{"call_id": "call:0", "score": 0.91}],
+        })
+        graph.add_node({
+            "id": "harmful_variation",
+            "type": "HARMFUL_VARIATION",
+            "data": [0, None],
+            "semantics": "0=explicit disease-associated pathogenic evidence; None=not established",
+        })
+        graph.add_edge(
+            "result:0",
+            "harmful_variation",
+            {"rel": "derived_batch", "src_layer": "SCORE_RESULT", "trgt_layer": "HARMFUL_VARIATION"},
+        )
+
+        table = build_stem_graph_table(graph.G)
+
+        self.assertEqual(table["rows"][0]["tdx"], 0)
+        self.assertEqual(table["rows"][0]["item_id"], "call:0")
+        self.assertEqual(table["tdx_groups"][0]["items"]["result:0"]["score"], 0.91)
+        self.assertEqual(table["tdx_groups"][0]["items"]["harmful_variation"], 0)
+        self.assertEqual(
+            table["legend"]["node_value_meanings"]["harmful_variation"]["values"]["0"],
+            "explicit disease-associated pathogenic evidence",
+        )
+        self.assertEqual(
+            table["rows"][1]["value_label"],
+            "explicit disease-associated pathogenic evidence",
+        )
+        self.assertEqual(table["physical_edges"][0]["rel"], "derived_batch")
 
 
 if __name__ == "__main__":

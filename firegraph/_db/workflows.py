@@ -23,34 +23,6 @@ from firegraph._db.log_facade import db_log
 # ---------- CORE ----------
 
 
-def db_connect() -> DuckDBPyConnection:
-    path = duck_db_path()
-    directory = os.path.dirname(path)
-    if directory and not os.path.exists(directory):
-        os.makedirs(directory)
-    try:
-        con = duckdb.connect(path)
-        db_log("info", "[duck] connect: ok", path=path)
-        return con
-    except Exception as e:
-        msg = str(e).lower()
-        if "being used by another process" in msg or "file is already open" in msg:
-            # Try read_only so we see data from the main file (CLI check, etc.)
-            try:
-                con = duckdb.connect(path, read_only=True)
-                db_log("warn", f"DuckDB file locked: {path}. Opened read_only.")
-                return con
-            except Exception:
-                pass
-            # Fallback: per-process file (writes go here; reads from main won't see them)
-            alt = str(Path(path).with_name(f"{Path(path).stem}.{os.getpid()}{Path(path).suffix}"))
-            alt_dir = os.path.dirname(alt)
-            if alt_dir and not os.path.exists(alt_dir):
-                os.makedirs(alt_dir)
-            db_log("warn", f"DuckDB file locked: {path}. Falling back to {alt}")
-            return duckdb.connect(alt)
-        raise
-
 
 def db_close(con: DuckDBPyConnection) -> None:
     con.close()

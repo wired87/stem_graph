@@ -20,10 +20,10 @@
     status.className = "status is-running";
     status.innerHTML = "<span></span> Acquiring evidence";
     try {
-      const rawVariants = document.querySelector("#vep-annotations").value.trim();
+      const rawVariants = form.elements.namedItem("vep_annotations").value.trim();
       const body = {
-        accessions: document.querySelector("#accessions").value,
-        sex: document.querySelector("#sex").value,
+        accessions: form.elements.namedItem("accessions").value,
+        sex: form.elements.namedItem("sex").value,
         vep_annotations: rawVariants ? JSON.parse(rawVariants) : [],
       };
       const response = await fetch(form.dataset.endpoint, {
@@ -38,6 +38,10 @@
       if (!response.ok || data.error) throw new Error(data.error || `Request failed (${response.status})`);
       lastPayload = data;
       const summary = data.summary;
+      const artifacts = data.artifacts || {};
+      document.querySelector("#artifact-links").innerHTML = Object.values(artifacts).map(
+        (artifact) => `<a class="secondary" href="${escapeHtml(artifact.url)}" ${artifact.filename.endsWith(".html") ? 'target="_blank" rel="noopener"' : "download"}>${escapeHtml(artifact.filename)}</a>`
+      ).join("");
       document.querySelector("#metric-grid").innerHTML = [
         ["Nodes", summary.nodes], ["Edges", summary.edges],
         ["Targets", summary.targets], ["Drugs", summary.drugs],
