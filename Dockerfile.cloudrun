@@ -1,0 +1,21 @@
+FROM python:3.11-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    DJANGO_SETTINGS_MODULE=cnvmaster.settings_stemcnv_server \
+    STEMCNV_EXECUTION_MODE=queue \
+    STEMCNV_PROCESS_ROLE=web \
+    DEBUG=0 \
+    PORT=8080
+
+WORKDIR /app
+COPY requirements-server.txt .
+RUN pip install --no-cache-dir -r requirements-server.txt
+COPY . .
+RUN chmod 0755 /app/cloudrun-entrypoint.sh \
+    && adduser --disabled-password --gecos "" --uid 10001 app \
+    && chown -R app:app /app
+USER app
+
+EXPOSE 8080
+CMD ["/app/cloudrun-entrypoint.sh"]

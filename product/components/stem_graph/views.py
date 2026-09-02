@@ -5,7 +5,7 @@ from rest_framework.views import APIView
 
 from cnvmaster.middleware import HybridResponseMixin
 from .serializers import StemGraphSerializer
-from .workflows import run_stem_graph
+from product.stemcnv_docker import ActiveStemCNVRunError, StemCNVDockerError, start_run
 
 
 class StemGraphView(HybridResponseMixin, APIView):
@@ -19,18 +19,20 @@ class StemGraphView(HybridResponseMixin, APIView):
         serializer = StemGraphSerializer(data=data, context={"request": request})
         if not serializer.is_valid():
             return self.validation_error_response(request, self.template_name, serializer.errors)
-        graph = None
         try:
-            graph, payload = run_stem_graph(**serializer.validated_data)
-            return Response(payload)
+            values = serializer.validated_data
+            return Response(start_run(
+                values.get("files", []), cores=values["cores"], output_name=values["output_name"]
+            ), status=202)
         except ValueError as exc:
             return self.component_response(
                 request, self.template_name, {"detail": str(exc), "message": str(exc)}, status_code=400
             )
-        except Exception as exc:
+        except ActiveStemCNVRunError as exc:
             return self.component_response(request, self.template_name, {
-                "detail": "StemCNV graph processing failed", "error": str(exc), "message": str(exc)
-            }, status_code=502)
-        finally:
-            if graph is not None:
-                graph.close()
+                "detail": str(exc), "message": str(exc)
+            }, status_code=409)
+        except StemCNVDockerError as exc:
+            return self.component_response(request, self.template_name, {
+                "detail": "StemCNV Docker execution failed", "error": str(exc), "message": str(exc)
+            }, status_code=503)

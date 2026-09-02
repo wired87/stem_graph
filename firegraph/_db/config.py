@@ -9,6 +9,7 @@ Env vars:
 from __future__ import annotations
 
 import os
+import tempfile
 from pathlib import Path
 
 from cnvmaster.settings import BASE_DIR
@@ -18,7 +19,10 @@ _DEFAULT_DUCK_PATH = str(Path(__file__).resolve().parent.parent / "local.duckdb"
 
 def duck_db_path() -> str:
     """Single canonical path for all processes (prod, test, CLI)."""
-    return BASE_DIR / "local.duckdb"
+    default = Path(tempfile.gettempdir()) / "stemgraph" / "firegraph.duckdb"
+    path = Path(os.environ.get("DUCK_DB_PATH", default))
+    path.parent.mkdir(parents=True, exist_ok=True)
+    return str(path)
 
 
 def duck_db_verbose() -> int:

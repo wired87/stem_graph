@@ -111,3 +111,25 @@ flowchart LR
 - [ ] Business logic implementation for infrastructure endpoints
 - [x] `admin/` dir: cloned `ar_registry`, `auth/` for credentials, `publish_executable.py` (GitHub API), `publish_project.py` (git push with auth + `.env`), `main.py` orchestrator
 - [x] README workflow graph: connected Mermaid flow for file upload, config upsert, Batch run, executable I/O, and admin publish
+# Local PostgreSQL startup
+
+The standard local stack uses PostgreSQL 16. Copy `.env.example` to `.env` if
+you want to change the local credentials, then start everything with:
+
+```bash
+docker compose up --build
+```
+
+The `postgres` service is health-checked before `web` starts. The generic
+`main.py` entrypoint waits for the database, applies all Django migrations, and
+then starts Django/DRF on <http://localhost:8000>.
+
+For a host-run Django process with only PostgreSQL in Docker:
+
+```bash
+docker compose up -d postgres
+DJANGO_SETTINGS_MODULE=cnvmaster.settings_stemcnv_server python main.py
+```
+
+PostgreSQL is the default. SQLite is reserved for isolated tests and must be
+selected explicitly with `DJANGO_DB_ENGINE=sqlite`.

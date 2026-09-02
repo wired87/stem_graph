@@ -2,6 +2,7 @@
 # DRF API entrypoint: migrate DB then expose Django on 0.0.0.0 (used by root Dockerfile)
 import os
 import sys
+import time
 from pathlib import Path
 
 # Project root and accounts package on import path (same as manage.py / wsgi)
@@ -12,14 +13,27 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'cnvmaster.settings')
 
 
 def main() -> None:
+    from django.db import connection
+    from django.db.utils import OperationalError
     from django.core.management import execute_from_command_line
 
-    # apply migrations before serving (MVP container boot)
+    deadline = time.monotonic() + int(os.getenv('DATABASE_WAIT_TIMEOUT', '60'))
+    while True:
+        try:
+            connection.ensure_connection()
+            connection.close()
+            break
+        except OperationalError:
+            if time.monotonic() >= deadline:
+                raise
+            print('Waiting for PostgreSQL…', flush=True)
+            time.sleep(2)
+
     execute_from_command_line(['main', 'migrate', '--noinput'])
     # bind all interfaces so Docker port mapping works
     host = os.getenv('DJANGO_HOST', '0.0.0.0')
     port = os.getenv('DJANGO_PORT', '8000')
-    execute_from_command_line(['main', 'runserver', f'{host}:{port}'])
+    execute_from_command_line(['main', 'runserver', f'{host}:{port}', '--noreload'])
 
 
 if __name__ == '__main__':

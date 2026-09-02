@@ -1,0 +1,81 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-stemgraph}
+      POSTGRES_USER: ${POSTGRES_USER:-stemgraph}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-stemgraph-local}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-stemgraph} -d ${POSTGRES_DB:-stemgraph}"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.cloudrun
+    restart: unless-stopped
+    environment:
+      DJANGO_SETTINGS_MODULE: cnvmaster.settings_stemcnv_server
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: ${POSTGRES_DB:-stemgraph}
+      POSTGRES_USER: ${POSTGRES_USER:-stemgraph}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-stemgraph-local}
+      STEMCNV_RUN_ROOT: /var/lib/stemcnv-runs
+      STEMCNV_EXAMPLE_DATA_DIR: /var/lib/stemcnv-upstream/example_data
+      STEMCNV_MEMORY_LIMIT: ${STEMCNV_MEMORY_LIMIT:-6700m}
+      STEMCNV_MEMORY_SWAP_LIMIT: ${STEMCNV_MEMORY_SWAP_LIMIT:-10g}
+      STEMCNV_WORKFLOW_MEMORY_MB: ${STEMCNV_WORKFLOW_MEMORY_MB:-6500}
+      STEMCNV_DOCKER_TIMEOUT: ${STEMCNV_DOCKER_TIMEOUT:-300}
+      STEMCNV_SNAKEMAKE_OPTIONS: "--set-resources run_CBS:mem_mb=6500 combined_PennCNV_output:mem_mb=6500"
+      STEMCNV_EXECUTION_MODE: queue
+      STEMCNV_PROCESS_ROLE: web
+      DUCK_DB_PATH: /tmp/stemgraph/web-firegraph.duckdb
+      ALLOWED_HOSTS: "*"
+      PORT: "8080"
+      CODEX_REFERRAL_URL: ${CODEX_REFERRAL_URL:-https://chatgpt.com/codex}
+    ports:
+      - "8000:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    restart: unless-stopped
+    command: python manage.py stemcnv_worker
+    environment:
+      DJANGO_SETTINGS_MODULE: cnvmaster.settings_stemcnv_server
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: ${POSTGRES_DB:-stemgraph}
+      POSTGRES_USER: ${POSTGRES_USER:-stemgraph}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-stemgraph-local}
+      STEMCNV_EXECUTION_MODE: queue
+      STEMCNV_PROCESS_ROLE: worker
+      STEMCNV_RUN_ROOT: /var/lib/stemcnv-runs
+      STEMCNV_EXAMPLE_DATA_DIR: /var/lib/stemcnv-upstream/example_data
+      STEMCNV_MEMORY_LIMIT: ${STEMCNV_MEMORY_LIMIT:-6700m}
+      STEMCNV_MEMORY_SWAP_LIMIT: ${STEMCNV_MEMORY_SWAP_LIMIT:-10g}
+      STEMCNV_WORKFLOW_MEMORY_MB: ${STEMCNV_WORKFLOW_MEMORY_MB:-6500}
+      STEMCNV_SNAKEMAKE_OPTIONS: "--set-resources run_CBS:mem_mb=6500 combined_PennCNV_output:mem_mb=6500"
+      DUCK_DB_PATH: /tmp/stemgraph/worker-firegraph.duckdb
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${STEMCNV_RUN_ROOT_HOST:-./.runtime/stemcnv-runs}:/var/lib/stemcnv-runs
+      - ${STEMCNV_EXAMPLE_DATA_HOST:-./stemcnv-example-data}:/var/lib/stemcnv-upstream/example_data:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres-data:

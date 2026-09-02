@@ -1,6 +1,7 @@
 .venv
 .git
 .idea
+.runtime
 **/__pycache__
 **/*.pyc
 **/.git

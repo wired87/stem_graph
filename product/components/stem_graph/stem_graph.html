@@ -1,22 +1,32 @@
 <section id="panel-stemcnv" class="workflow-panel workflow-panel--cream" role="tabpanel"
          aria-labelledby="tab-stemcnv" data-workflow-panel="stemcnv" hidden>
-  <header><p class="eyebrow">ARRAY EVIDENCE TO STEMGRAPH</p><h2>Build the graph.</h2></header>
+  <header><p class="eyebrow">THE SAME STEMCNV ENGINE, WITH SIMPLE CONTROLS</p><h2>Three simple steps: add, start, download.</h2><p>No command line is needed. If you do not add files, the official example data is used so you can see how the process works.</p></header>
   <form id="stemcnv-step" method="post" enctype="multipart/form-data" data-endpoint="{% url 'run-local' %}">
     {% csrf_token %}
     {% if form.errors %}<div class="workflow-error" role="alert">{{ form.errors }}</div>{% endif %}
     <div class="step-grid">
-      <section class="workflow-step"><span class="step-number">01</span><h3>Load one complete array bundle</h3>
-        <label class="file-drop"><input name="files" type="file" multiple required accept=".idat,.bpm,.egt,.csv,.tsv,.txt,.yaml,.yml">
-          <b>Select IDAT pairs and BPM, EGT, CSV references</b></label></section>
-      <section class="workflow-step"><span class="step-number">02</span><h3>Configure graph enrichment</h3>
-        <label class="inline-check"><input name="annotate_variants" type="checkbox" value="true"><span>Annotate eligible variants</span></label>
-        <label><span>Functional annotations</span><textarea name="functional_annotation" rows="3"></textarea></label>
-        <label><span>Function similarity threshold</span><input name="function_similarity_threshold" type="number" value="0.75" min="0" max="1" step="0.01"></label>
-        <button type="submit">Build StemCNV graph <b>→</b></button><p class="workflow-error" data-error hidden></p>
+      <section class="workflow-step workflow-step--input"><span class="step-number">01</span><h3>Add the DNA chip folder</h3>
+        <label class="file-drop" data-drop-zone tabindex="0"><input name="files" type="file" multiple hidden accept=".idat,.bpm,.egt,.csv,.csv.gz,.tsv,.xlsx,.yaml,.yml,.gz">
+          <b>Drop the whole folder here, or click to choose files</b><small data-file-summary>No files selected — the official StemCNV example will be used.</small></label>
+        <p class="state-help"><b>Important:</b> If you select even one file, the run uses only your files. Missing files stop the run before Docker starts; official example files are never mixed into researcher data.</p>
+        <p class="input-hint">You can drop a complete folder. The server checks the names and safely places every file where StemCNV expects it.</p>
+        <details class="required-files"><summary>Which files must a researcher provide?</summary><ul>
+          <li><b>config.yaml</b> — tells StemCNV which array and reference files to use.</li>
+          <li><b>sample_table.tsv</b> or <b>sample_table.xlsx</b> — one row per sample, including Sample_ID, Chip_Name, Chip_Pos, Array_Name, and Sex.</li>
+          <li><b>One green and one red IDAT per sample</b> — matching names ending in <code>_Grn.idat</code> and <code>_Red.idat</code>.</li>
+          <li><b>All files named in config.yaml</b> — normally BPM, EGT, CSV manifest, PennCNV PFB and GC model, density BED, and gaps BED.</li>
+        </ul><p>Keep filenames exactly the same as the paths in config.yaml. Duplicate filenames, missing color pairs, and unsafe paths are rejected before Docker starts.</p></details></section>
+      <section class="workflow-step workflow-step--action"><span class="step-number">02</span><h3>Name the result and start</h3>
+        <label><span>Computer workers</span><input name="cores" type="number" value="3" min="1" max="64" step="1"><small>Leave this at 3 unless the server owner tells you otherwise.</small></label>
+        <label><span>Name of the download</span><input name="output_name" type="text" value="stemcnv-results.zip" maxlength="100" pattern="[A-Za-z0-9][A-Za-z0-9._-]{0,99}"><small>The finished reports will be packed into this ZIP file.</small></label>
+        <p>After you press Start, this button stays locked until StemCNV finishes. You may refresh the page; the saved progress will return.</p>
+        <button type="submit" data-confirm>Start the official StemCNV check <b>→</b></button><p class="workflow-error" data-error hidden></p>
       </section>
     </div>
   </form>
-  <section class="workflow-output"><div><h3>Backend response</h3></div><div>
-    <div class="stem-graph-table" data-stemcnv-table hidden></div><pre data-stemcnv-result>Waiting for a complete file bundle.</pre>
+  <section class="workflow-output" aria-live="polite"><div><h3>What is happening?</h3><div class="stemcnv-loader" data-stemcnv-loader hidden aria-label="StemCNV is working"></div><p class="state-help">Confirm your setup and download the files when finished.</p></div><div>
+    <p class="stemcnv-status" data-stemcnv-status>Ready. Add a folder or use the example, then press Start.</p>
+    <dl class="stemcnv-response" data-stemcnv-response hidden></dl>
+    <div class="stem-graph-table" data-stemcnv-table hidden></div><details class="stemcnv-history"><summary>Show the latest eight steps</summary><ol class="stemcnv-events" data-stemcnv-events><li>Ready — waiting for you to press Start.</li></ol></details><details><summary>Show technical details (for support)</summary><pre data-stemcnv-result></pre></details>
   </div></section>
 </section>

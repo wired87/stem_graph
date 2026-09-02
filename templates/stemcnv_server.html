@@ -1,0 +1,14 @@
+{% extends "base.html" %}{% load static %}
+{% block title %}Official StemCNV Workflow UI{% endblock %}
+{% block head %}<link rel="stylesheet" href="{% static 'workflow/index.css' %}?v=20260901b">{% endblock %}
+{% block content %}
+<section class="workflow-intro">
+  <p class="eyebrow">OFFICIAL STEMCNV-CHECK 1.0.0 WORKFLOW UI</p>
+  <h1>Check DNA chip data<br><em>with StemCNV.</em></h1>
+  <p>This page is the friendly interface for the official StemCNV-check workflow. Add the files from the DNA chip, press start, and leave the page open. The computer prepares the files, performs the checks, and gives you one ZIP file to download.</p>
+  <aside class="family-note"><b>For families and parents:</b> Think of StemCNV as a careful sorting machine. It reads measurements from a DNA chip and groups possible chromosome copy-number changes into a report. It does not diagnose a child or replace a doctor, genetic counsellor, or clinical laboratory.</aside>
+</section>
+{% include "product/components/stem_graph/stem_graph.html" %}
+{% endblock %}
+{% block footer %}<span>Official StemCNV workflow UI · Research use only</span><span>Made with Brain by <a href="mailto:derbenedikt.sterra@gmail.com?subject=StemCNV%20UI&amp;body=Hi%2C%20Im%20a%20big%20fan%20of%20you...">Benedikt Sterra</a> &amp; <a href="{{ codex_referral_url }}" rel="sponsored noopener" target="_blank"{% if codex_referral_configured %} data-referral="active"{% endif %}>Codex</a></span>{% endblock %}
+{% block scripts %}<script src="{% static 'workflow/stemcnv.js' %}?v=20260901b" defer></script>{% endblock %}

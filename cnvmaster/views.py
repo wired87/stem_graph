@@ -1,3 +1,5 @@
+import os
+
 from django.http import HttpResponse
 from django.shortcuts import render
 
@@ -13,6 +15,14 @@ def home(request):
 
 def cnv_workspace(request):
     return render(request, "workspaces/cnv.html", {"theme": "cnv"})
+
+
+def stemcnv_home(request):
+    return render(request, "stemcnv_server.html", {
+        "theme": "workflow",
+        "codex_referral_url": os.getenv("CODEX_REFERRAL_URL", "https://chatgpt.com/codex"),
+        "codex_referral_configured": bool(os.getenv("CODEX_REFERRAL_URL")),
+    })
 
 
 def go_workspace(request):

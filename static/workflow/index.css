@@ -31,6 +31,7 @@
 .candidate-picker label{display:flex;gap:9px;align-items:center;margin:0;padding:7px}.candidate-picker input,.inline-check input{width:auto}
 .inline-check{display:flex!important;align-items:center;gap:9px}.inline-check span{margin:0!important}
 .file-drop{min-height:250px;display:grid!important;place-items:center;text-align:center;border:1px dashed #b99a6e;border-radius:12px;background:#fffdf8;padding:24px}
+.file-drop{cursor:pointer}.file-drop.is-dragging,.file-drop:focus-visible{outline:3px solid var(--result-accent,#111);outline-offset:3px}.input-hint{font-size:.75rem;line-height:1.45}
 .file-drop input{border:0;background:transparent}.file-drop small{color:#786b59;line-height:1.5}
 .workflow-output{display:grid;grid-template-columns:260px 1fr;gap:20px;margin-top:18px;padding:24px;border-radius:14px;background:#101d38;color:#edf4ff}
 .workflow-panel--cream .workflow-output{background:#3f3326;color:#fffaf0}.workflow-output pre{margin:0;max-height:420px;overflow:auto;white-space:pre-wrap;color:#b9cae9}
@@ -47,3 +48,44 @@
 @media(max-width:1000px){.research-badges{grid-template-columns:1fr 1fr}}
 @media(max-width:800px){.step-grid,.workflow-output{grid-template-columns:1fr}.workflow-tabs{top:88px}.workflow-panel{padding:18px}.workflow-intro{padding-top:42px}}
 @media(max-width:560px){.research-badges{grid-template-columns:1fr}}
+
+/* Focused StemCNV UI: monochrome surfaces with structure carried by borders. */
+.theme-workflow,.theme-workflow .topbar,.workflow-panel,.workflow-step,.file-drop,.workflow-output,
+.workflow-step input,.workflow-step textarea,.workflow-step select,.workflow-step button,
+.stem-graph-table,.stem-graph-table th{background:#fff!important;color:#111!important;box-shadow:none!important}
+.theme-workflow .brand,.theme-workflow .brand__mark,.theme-workflow .topnav a,.workflow-intro h1,
+.workflow-intro h1 em,.workflow-panel .eyebrow,.workflow-error,.file-drop small{color:#111!important}
+.theme-workflow .topbar,.theme-workflow .brand__mark,.workflow-panel,.workflow-step,.file-drop,
+.workflow-output,.workflow-step input,.workflow-step textarea,.workflow-step select,.workflow-step button,
+.stem-graph-table,.stem-graph-table th,.stem-graph-table td{border-color:#111!important}
+.workflow-step button{border:1px solid #111!important}
+.stemcnv-status{font-size:1.05rem;font-weight:800;border:1px solid #111;padding:12px;margin:0 0 14px}
+.stemcnv-response{display:grid;grid-template-columns:max-content 1fr;margin:0 0 18px;border:1px solid #111}
+.stemcnv-response[hidden]{display:none}.stemcnv-response dt,.stemcnv-response dd{margin:0;padding:8px 10px;border-bottom:1px solid #111}
+.stemcnv-response dt{font-weight:800;border-right:1px solid #111}.stemcnv-history{margin:0 0 10px}.stemcnv-events{max-height:170px;overflow:auto;padding-left:24px;margin:8px 0}.stemcnv-events li{padding:4px 0;border-bottom:1px solid #bbb;font-size:.75rem}
+.stemcnv-loader{width:28px;height:28px;border:3px solid #bbb;border-top-color:var(--result-accent,#111)!important;border-radius:50%;animation:stemcnv-spin .8s linear infinite}
+.workflow-output.is-complete{border:4px solid var(--result-accent)!important;background:color-mix(in srgb,var(--result-accent) 12%,white)!important}.workflow-output.is-complete .stemcnv-status{border-color:var(--result-accent)!important}
+.stemcnv-loader[hidden]{display:none}@keyframes stemcnv-spin{to{transform:rotate(360deg)}}
+.theme-workflow *{color:#111!important;border-color:#111!important}
+.theme-workflow main *:not(input):not(textarea):not(select):not(button){background-color:transparent!important}
+.theme-workflow,.theme-workflow main,.theme-workflow .topbar,.theme-workflow input,
+.theme-workflow textarea,.theme-workflow select,.theme-workflow button{background-color:#fff!important}
+
+/* Small, evenly distributed accents; surfaces stay white and borders stay black. */
+.family-note{margin-top:18px;padding:14px 16px;border:1px solid #111!important;border-left:6px solid #f0c419!important;line-height:1.55}
+.workflow-step--input{border-left:6px solid #ef7d22!important}
+.workflow-step--action{border-left:6px solid #2878d0!important}
+.file-drop{border:2px dashed #ef7d22!important}
+.file-drop.is-dragging,.file-drop:focus-visible{outline:3px solid #ef7d22!important}
+.workflow-step--action label:nth-of-type(1) input{border-left:6px solid #f0c419!important}
+.workflow-step--action label:nth-of-type(2) input{border-left:6px solid #7b4cc2!important}
+.workflow-step--action button{border-left:8px solid #239b56!important}
+.workflow-step--action button:not(:disabled):hover{box-shadow:inset 0 -4px 0 #239b56!important}
+.workflow-error:not([hidden]){border-left:6px solid #d83a3a!important;padding-left:10px}
+.stemcnv-loader{border-color:#bbb!important;border-top-color:#d83a3a!important}
+.workflow-output,.workflow-output.is-complete{border:1px solid #111!important;background:#fff!important}
+.workflow-output.is-complete .stemcnv-status{border-color:#111!important}
+.stem-graph-table a.dispense{border:1px solid #111!important;border-left:8px solid #239b56!important;background:#fff!important}
+.site-footer a:first-of-type{border-bottom:3px solid #2878d0!important;text-decoration:none}
+.site-footer a:last-of-type{border-bottom:3px solid #7b4cc2!important;text-decoration:none}
+.state-help{font-size:.78rem;line-height:1.5}.workflow-step small{display:block;margin-top:5px;font-size:.72rem;line-height:1.4}

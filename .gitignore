@@ -48,3 +48,5 @@ pitch_deck/deck.pdf
 # OS
 .DS_Store
 Thumbs.db
+.runtime/
+/tmp/

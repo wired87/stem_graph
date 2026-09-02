@@ -11,15 +11,13 @@ ENV ALLOWED_HOSTS=*
 ENV DJANGO_HOST=0.0.0.0
 ENV DJANGO_PORT=8000
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN apt-get update && apt-get install -y --no-install-recommends docker.io ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
 
-COPY cnvmaster ./cnvmaster
-COPY product ./product
-COPY file_master ./file
-COPY infrastructure ./infrastructure
-COPY user ./user
-COPY manage.py main.py ./
+COPY requirements-server.txt .
+RUN pip install --no-cache-dir -r requirements-server.txt
+
+COPY . .
 
 EXPOSE 8000
 

@@ -1,0 +1,16 @@
+FROM python:3.11-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    DJANGO_SETTINGS_MODULE=cnvmaster.settings_stemcnv_server \
+    STEMCNV_EXECUTION_MODE=queue \
+    STEMCNV_PROCESS_ROLE=worker
+
+WORKDIR /app
+RUN apt-get update && apt-get install -y --no-install-recommends docker.io ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+COPY requirements-server.txt .
+RUN pip install --no-cache-dir -r requirements-server.txt
+COPY . .
+
+CMD ["python", "manage.py", "stemcnv_worker"]

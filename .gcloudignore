@@ -1,0 +1,9 @@
+.git
+.idea
+__pycache__
+*.pyc
+*.sqlite3
+*.duckdb
+.env
+/product/executable
+/BeadArrayFiles

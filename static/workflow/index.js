@@ -149,15 +149,24 @@
     button.disabled = true;
     stemTable.hidden = true;
     stemTable.innerHTML = "";
-    stemResult.textContent = "Building the StemCNV graph…";
+    stemResult.textContent = "Uploading and staging the StemCNV project…";
     try {
       const data = await requestJson(stemForm.dataset.endpoint, {
         method: "POST",
         headers: {"X-CSRFToken": csrf(stemForm)},
         body: new FormData(stemForm),
       });
-      renderStemGraphTable(stemTable, data.stem_graph_table);
       stemResult.textContent = JSON.stringify(data, null, 2);
+      let state = data;
+      while (state.status === "running" || state.status === "created") {
+        await new Promise((resolve) => setTimeout(resolve, 5000));
+        state = await requestJson(`/api/product/status-run/${data.run_id}/`, {headers: {"X-CSRFToken": csrf(stemForm)}});
+        stemResult.textContent = JSON.stringify(state, null, 2);
+      }
+      if (state.status === "complete" && state.artifacts_url) {
+        stemTable.hidden = false;
+        stemTable.innerHTML = `<a class="dispense" href="${state.artifacts_url}">Download StemCNV results</a>`;
+      }
     } catch (exception) {
       error.textContent = exception.message;
       error.hidden = false;

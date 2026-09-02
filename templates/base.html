@@ -21,8 +21,10 @@
   </header>
   <main class="shell">{% block content %}{% endblock %}</main>
   <footer class="site-footer">
+    {% block footer %}
     <span>CNVMaster research environment</span>
     <span>Research use only · Evidence remains traceable</span>
+    {% endblock %}
   </footer>
   <script src="{% static 'lab/lab.js' %}" defer></script>
   {% block scripts %}{% endblock %}
