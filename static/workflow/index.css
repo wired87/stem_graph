@@ -89,3 +89,4 @@
 .site-footer a:first-of-type{border-bottom:3px solid #2878d0!important;text-decoration:none}
 .site-footer a:last-of-type{border-bottom:3px solid #7b4cc2!important;text-decoration:none}
 .state-help{font-size:.78rem;line-height:1.5}.workflow-step small{display:block;margin-top:5px;font-size:.72rem;line-height:1.4}
+.selected-files{list-style:none;margin:12px 0 0;padding:0;border:1px solid #111}.selected-files li{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 10px;border-bottom:1px solid #111;font-size:.76rem}.selected-files li:last-child{border-bottom:0}.selected-files span{overflow-wrap:anywhere}.selected-files .remove-file{width:auto;padding:6px 9px;border:1px solid #111!important;border-left:5px solid #d83a3a!important;background:#fff!important;color:#111!important;flex:0 0 auto;text-transform:none}

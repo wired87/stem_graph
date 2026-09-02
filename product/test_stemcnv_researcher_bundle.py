@@ -9,13 +9,22 @@ import yaml
 from django.core.files import File
 from django.test import SimpleTestCase
 
-from product.stemcnv_docker import _stage_uploads, validate_upload_bundle
+from product.stemcnv_docker import _link_or_copy, _stage_uploads, validate_upload_bundle
 
 
 FIXTURE_ROOT = Path(os.getenv("STEMCNV_TEST_DATA_DIR", "/var/lib/stemcnv-upstream/example_data"))
 
 
 class StemCNVResearcherBundleTest(SimpleTestCase):
+    def test_real_idat_can_cross_filesystems_without_partial_copy_failure(self):
+        source = next(iter(sorted((FIXTURE_ROOT / "RAW").rglob("*.idat"))), None)
+        if source is None:
+            raise unittest.SkipTest(f"official StemCNV IDAT data not found at {FIXTURE_ROOT}")
+        with tempfile.TemporaryDirectory(prefix="stemcnv-cross-device-") as directory:
+            destination = Path(directory) / source.name
+            _link_or_copy(str(source), str(destination))
+            self.assertEqual(destination.stat().st_size, source.stat().st_size)
+
     def test_official_drag_drop_bundle_validates_and_stages(self):
         if not (FIXTURE_ROOT / "config.yaml").is_file():
             raise unittest.SkipTest(f"official StemCNV data not found at {FIXTURE_ROOT}")

@@ -8,6 +8,7 @@
       <section class="workflow-step workflow-step--input"><span class="step-number">01</span><h3>Add the DNA chip folder</h3>
         <label class="file-drop" data-drop-zone tabindex="0"><input name="files" type="file" multiple hidden accept=".idat,.bpm,.egt,.csv,.csv.gz,.tsv,.xlsx,.yaml,.yml,.gz">
           <b>Drop the whole folder here, or click to choose files</b><small data-file-summary>No files selected — the official StemCNV example will be used.</small></label>
+        <ul class="selected-files" data-selected-files hidden aria-label="Selected StemCNV input files"></ul>
         <p class="state-help"><b>Important:</b> If you select even one file, the run uses only your files. Missing files stop the run before Docker starts; official example files are never mixed into researcher data.</p>
         <p class="input-hint">You can drop a complete folder. The server checks the names and safely places every file where StemCNV expects it.</p>
         <details class="required-files"><summary>Which files must a researcher provide?</summary><ul>

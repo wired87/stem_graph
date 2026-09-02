@@ -14,6 +14,7 @@
   const confirmButton = form.querySelector("[data-confirm]");
   const outputPanel = document.querySelector(".workflow-output");
   const dropZone = form.querySelector("[data-drop-zone]");
+  const selectedFiles = form.querySelector("[data-selected-files]");
   const fileInputs = [fileInput];
 
   const readEntry = async (entry) => {
@@ -54,6 +55,28 @@
     summary.textContent = count
       ? `${count} file${count === 1 ? "" : "s"} selected.`
       : "No files selected — the canonical StemCNV example data will be used.";
+    selectedFiles.replaceChildren();
+    selectedFiles.hidden = count === 0;
+    [...fileInput.files].forEach((file, index) => {
+      const item = document.createElement("li");
+      const name = document.createElement("span");
+      name.textContent = file.name;
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.className = "remove-file";
+      remove.textContent = "Remove";
+      remove.setAttribute("aria-label", `Remove ${file.name}`);
+      remove.addEventListener("click", () => {
+        const transfer = new DataTransfer();
+        [...fileInput.files].forEach((candidate, candidateIndex) => {
+          if (candidateIndex !== index) transfer.items.add(candidate);
+        });
+        fileInput.files = transfer.files;
+        updateFileSummary();
+      });
+      item.append(name, remove);
+      selectedFiles.append(item);
+    });
   };
   fileInputs.forEach((input) => input.addEventListener("change", updateFileSummary));
 
@@ -101,7 +124,19 @@
   const requestJson = async (url, options = {}) => {
     const response = await fetch(url, options);
     if (response.status === 204) return null;
-    const data = await response.json();
+    const body = await response.text();
+    let data = {};
+    try {
+      data = body ? JSON.parse(body) : {};
+    } catch (_) {
+      const plainText = new DOMParser().parseFromString(body, "text/html").body.textContent
+        .replace(/\s+/g, " ").trim().slice(0, 500);
+      throw new Error(
+        response.ok
+          ? "The server returned an unreadable response."
+          : `The server returned an HTML error (${response.status}). ${plainText}`
+      );
+    }
     if (!response.ok) {
       const validation = data.errors && Object.values(data.errors).flat(Infinity).join(" ");
       throw new Error(validation || data.error || data.detail || data.message || `Request failed (${response.status})`);

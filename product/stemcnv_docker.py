@@ -227,10 +227,16 @@ def _stage_example_data(run_dir: Path) -> None:
     for name in ("RAW", "static-data"):
         source = EXAMPLE_DATA_ROOT / name
         if source.is_dir():
-            try:
-                shutil.copytree(source, run_dir / name, copy_function=os.link)
-            except OSError:
-                shutil.copytree(source, run_dir / name, copy_function=shutil.copy2)
+            shutil.copytree(source, run_dir / name, copy_function=_link_or_copy)
+
+
+def _link_or_copy(source: str, destination: str) -> str:
+    """Hard-link when possible and safely copy individual cross-device files."""
+    try:
+        os.link(source, destination)
+    except OSError:
+        return shutil.copy2(source, destination)
+    return destination
 
 
 def _persist_artifacts(record: StemCNVRun, run_dir: Path) -> list[str]:
@@ -330,7 +336,9 @@ def _launch_record(record: StemCNVRun) -> dict:
                                          "at": datetime.now(timezone.utc).isoformat()}]
         record.save()
         shutil.rmtree(run_dir, ignore_errors=True)
-        raise
+        if isinstance(exc, StemCNVDockerError):
+            raise
+        raise StemCNVDockerError(f"StemCNV could not prepare or start the run: {exc}") from exc
     record.container_id = result.stdout.strip()
     record.status = "running"
     record.events = [*record.events, {"type": "run_started", "message": "Docker analysis started",

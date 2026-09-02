@@ -1,135 +1,150 @@
-# CNVMaster
+# Stem Graph · Official StemCNV Workflow UI
 
-Django API project with section-based apps for product, file, infrastructure, and user endpoints.
+[![StemCNV-check](https://img.shields.io/badge/engine-StemCNV--check%201.0.0-111111)](https://github.com/bihealth/StemCNV-check)
+[![Django](https://img.shields.io/badge/server-Django%20%2B%20DRF-0c4b33)](https://www.djangoproject.com/)
+[![Docker Compose](https://img.shields.io/badge/run-Docker%20Compose-2496ed)](https://docs.docker.com/compose/)
+[![Research use only](https://img.shields.io/badge/use-research%20only-f59e0b)](#important-medical-and-data-notice)
 
-## Setup
+Stem Graph is a browser-based interface for the **official
+[StemCNV-check](https://github.com/bihealth/StemCNV-check) engine**. Researchers
+can drop in a complete SNP-array dataset, follow its progress, and download a
+small result bundle containing the final raw result files and HTML reports.
 
-```bash
-python -m venv .venv
-.venv\Scripts\activate
-pip install -r requirements.txt
-python manage.py migrate
-python manage.py runserver
-```
+The application does not replace or reimplement the scientific workflow. It
+adds a friendly Django/DRF web interface, validates inputs, starts StemCNV in an
+isolated Docker container, records job state in PostgreSQL, and exposes the
+finished download only after the engine succeeds.
 
-## Docker (DRF API)
+> **In plain language:** add the DNA-chip files, press Start, wait for the real
+> StemCNV workflow, then download its report. If no files are supplied, the
+> configured official example dataset is used.
 
-```bash
-docker build -t cnvmaster-api .
-docker run --rm -p 8000:8000 -e ALLOWED_HOSTS=* cnvmaster-api
-```
+## What the application provides
 
-API at `http://localhost:8000/api/...` (migrations run automatically on container start via `main.py`).
+- One unified drag-and-drop area for files or complete folders
+- Clear validation before Docker starts—research files are never mixed with
+  example files
+- Live progress, a compact event history, and a disabled Start button while a
+  run is active
+- Persistent run state, inputs, events, and output artifacts in PostgreSQL
+- A downloadable ZIP containing researcher-facing results rather than hundreds
+  of internal workflow files
+- Separate web and worker processes for reliable VM deployment
 
-## API Routes
+## Five-step setup
 
-| Section | Endpoint |
-|---------|----------|
-| Product | `/api/product/run-sample/`, `/api/product/status-run/` |
-| File | `/api/file/get-file-names/`, `/api/file/get-file/`, `/api/file/set-file/`, `/api/file/delete-file/`, `/api/file/update-file/` |
-| Infrastructure | `/api/infrastructure/machine/on/`, `/api/infrastructure/machine/off/` |
-| User | `/api/user/get-file-names/`, `/api/user/get-file/`, `/api/user/set-file/`, `/api/user/delete-file/`, `/api/user/update-file/` |
+These instructions target a Linux VM. Windows users can use Docker Desktop with
+the WSL 2 backend. Allow at least **8 GB RAM** for the scientific worker; real
+datasets may require additional memory and disk space.
 
-## Workflow Graph
+1. **Install the prerequisites.** Install
+   [Git](https://git-scm.com/downloads) and
+   [Docker Engine with Compose](https://docs.docker.com/engine/install/). Make
+   sure `docker compose version` works.
+
+2. **Download this project.**
+
+   ```bash
+   git clone https://github.com/wired87/stem_graph.git
+   cd stem_graph
+   ```
+
+3. **Create the local configuration.**
+
+   ```bash
+   cp .env.example .env
+   ```
+
+   Before using real data, open `.env` and replace the example PostgreSQL
+   password. All host paths are relative to this repository by default; do not
+   hard-code a developer's home directory.
+
+4. **Add the official example data.** Download the example bundle described by
+   the [StemCNV documentation](https://stemcnv-check.readthedocs.io/) and place
+   its `config.yaml`, sample table, `RAW/`, and `static-data/` inside
+   `stemcnv-example-data/`. Alternatively, point `STEMCNV_EXAMPLE_DATA_HOST` in
+   `.env` to an existing bundle. This enables the no-upload demonstration run.
+
+5. **Start everything and open the dashboard.**
+
+   ```bash
+   docker compose up --build
+   ```
+
+   Wait until PostgreSQL, the web service, and the worker are healthy, then open
+   **[http://localhost:8000/](http://localhost:8000/)**. Stop the stack with
+   `Ctrl+C`; start it later with `docker compose up`.
+
+## Files required for a researcher run
+
+Drop the complete dataset—not a partial selection. It must contain:
+
+- `config.yaml`
+- `sample_table.tsv` or `sample_table.xlsx`
+- matching `*_Grn.idat` and `*_Red.idat` files for every sample
+- every array/reference file named by `config.yaml`, normally BPM, EGT, CSV
+  manifest, PennCNV PFB and GC model, density BED, and gaps BED
+
+If one or more files are missing, the API explains what is missing and where
+StemCNV expected to read it. Docker is not started for an invalid upload.
+
+## How a run moves through the system
 
 ```mermaid
 flowchart LR
-  %% Actors
-  Client[Client / Frontend]
-  GitHub[(GitHub)]
-  GCS[(GCS Bucket\nGBUCKET_NAME)]
-  Batch[(GCP Batch)]
-  AR[(Artifact Registry)]
-
-  %% API surface
-  subgraph DjangoAPI[CNVMaster Django API]
-    FileSet[/POST /api/file/set-file/]
-    FileGet[/POST /api/file/get-file/]
-    ProductRun[/POST /api/product/run-sample/]
-    ProductStatus[/GET|POST /api/product/status-run/]
-  end
-
-  %% Admin publishing
-  subgraph AdminTools[admin/*]
-    PubExec[publish_executable.py\nGitHub Git Data API push]
-    PubProj[publish_project.py\ngit commit + push]
-  end
-
-  %% Executable runtime
-  subgraph Executable[product/executable container\npython main.py]
-    FetchInput[Step 1: download prefix\nUSER_ID/input/SESSION_ID/ → input/]
-    Config[Step 2: config.yaml\nuse input/config.yaml if present\nelse build from discovered local paths]
-    Run[Step 3: run StemCNV-check\n(stemcnv_check run ...)]
-    Metadata[Write logs\nexecution_timing.json + metadata.json]
-    Upload[Step 4: upload out/ + logs/\n→ USER_ID/output/SESSION_ID/]
-  end
-
-  %% Input preparation via file routes
-  Client --> FileSet
-  FileSet -->|upload inputs\n(.bpm/.egt/.csv/.idat, sample_table.tsv, ...)| GCS
-  FileSet -->|when payload has config={...}\ncreate config.yaml under input/<session_id>/| GCS
-  Client --> FileGet --> GCS
-
-  %% Batch submission + status
-  Client --> ProductRun --> Batch
-  Client --> ProductStatus --> Batch
-  Batch -->|starts container with env:\nUSER_ID, SESSION_ID, GBUCKET_NAME| Executable
-
-  %% Executable IO
-  Executable --> FetchInput --> Config --> Run --> Metadata --> Upload --> GCS
-
-  %% Admin publish -> image supply chain (high level)
-  PubExec --> GitHub
-  PubProj --> GitHub
-  GitHub -->|CI/build step (external)\nbuilds Docker image| AR
-  AR -->|EXEC_DOCKER_PATH points here| ProductRun
+    UI[Browser UI] -->|folder or official example| API[Django / DRF]
+    API --> V[Validate and store input]
+    V --> DB[(PostgreSQL)]
+    V --> Q[Worker queue]
+    Q --> D[Official StemCNV Docker engine]
+    D -->|events and final artifacts| DB
+    DB -->|status and download| UI
 ```
 
-## Progress
+The web process never performs the scientific calculation itself. The worker
+owns Docker execution, while PostgreSQL is the shared source of truth for the
+web interface and worker.
 
-- [x] Django project scaffold
-- [x] Django REST framework installed
-- [x] `product` app with `views/` APIViews: run-sample, status-run
-- [x] `file` app with `views/` APIViews: get-file-names, get-file, set-file, delete-file, update-file
-- [x] `infrastructure` app with `views/` APIViews: machine on/off
-- [x] `user` app with `views/` APIViews: get-file-names, get-file, set-file, delete-file, update-file
-- [x] Root URL wiring under `/api/<section>/`
-- [x] Cloned `_g_storage` into `file/_g_storage` and wired file endpoints to `GBucket`
-- [x] File routes use `user_id`/`auth` from `request.data`, fallback `TEST_USER_ID` env
-- [x] `product/config_creator.py`: StemCNV `config.yaml` builder; `file/set-file` upserts to `input/<session_id>/config.yaml` from `config` payload
-- [x] Executable `main.py` uses downloaded `input/config.yaml` when present; falls back to local path discovery
-- [x] Executable `main.py` tracks per-step timing in `logs/execution_timing.json`; falls back to `test_data/` when no input
-- [x] Executable writes `metadata.json` (start/stop, hardware, limits) and upserts to `{USER_ID}/output/{SESSION_ID}/metadata.json`
-- [x] Executable upserts full session output to GCS: `out/` + `logs/` under `{USER_ID}/output/{SESSION_ID}/`
-- [x] Cloned `fb_core` and extended with `sync_user_session`, `resolve_billing_user_id`, `record_purchase_event`, `ensure_user_bucket_folder`
-- [x] User routes wired to JWT auth (`user.accounts.jwt_auth`), `GBucket` storage, and `FirebaseAdmin` RTDB history
-- [x] Registered `accounts` app + `AUTH_USER_MODEL`; `user/` on `sys.path` for legacy `accounts.*` imports
-- [x] Root `Dockerfile` + `main.py` expose DRF API on port 8000 (`python main.py`)
-- [x] `product/batch/`: GCP Batch config + `BatchManager` (submit, get, cancel, list jobs for executable image)
-- [x] Product `run-sample` submits GCP Batch jobs via `EXEC_DOCKER_PATH`; `hardware` POST fields override VM/task sizing
-- [x] `file/tests.py`: integration tests for all file API routes; upsert uses `product/executable/example_data`
-- [ ] Business logic implementation for infrastructure endpoints
-- [x] `admin/` dir: cloned `ar_registry`, `auth/` for credentials, `publish_executable.py` (GitHub API), `publish_project.py` (git push with auth + `.env`), `main.py` orchestrator
-- [x] README workflow graph: connected Mermaid flow for file upload, config upsert, Batch run, executable I/O, and admin publish
-# Local PostgreSQL startup
-
-The standard local stack uses PostgreSQL 16. Copy `.env.example` to `.env` if
-you want to change the local credentials, then start everything with:
+## Useful operations
 
 ```bash
-docker compose up --build
+# Start in the background
+docker compose up --build -d
+
+# Follow web and worker logs
+docker compose logs -f web worker
+
+# Check service state
+docker compose ps
+
+# Stop containers without deleting the PostgreSQL volume
+docker compose down
 ```
 
-The `postgres` service is health-checked before `web` starts. The generic
-`main.py` entrypoint waits for the database, applies all Django migrations, and
-then starts Django/DRF on <http://localhost:8000>.
+Do not use `docker compose down -v` unless you intentionally want to delete the
+local database volume.
 
-For a host-run Django process with only PostgreSQL in Docker:
+## Important medical and data notice
 
-```bash
-docker compose up -d postgres
-DJANGO_SETTINGS_MODULE=cnvmaster.settings_stemcnv_server python main.py
-```
+This software is intended for **research and quality-control use only**. A
+StemCNV result is not a diagnosis and must be reviewed and, where necessary,
+confirmed by qualified clinical professionals.
 
-PostgreSQL is the default. SQLite is reserved for isolated tests and must be
-selected explicitly with `DJANGO_DB_ENGINE=sqlite`.
+DNA-array files can contain sensitive genetic and patient-related information.
+For real patient data, deploy only inside an institution-approved environment
+with access control, encryption, backups, retention/deletion rules, audit
+logging, and a documented GDPR/DSGVO assessment. Do not expose the development
+server directly to the public internet.
+
+## Documentation and links
+
+- [Friendly user guide](README_STEMCNV.md)
+- [This project on GitHub](https://github.com/wired87/stem_graph)
+- [Official StemCNV-check repository](https://github.com/bihealth/StemCNV-check)
+- [Official StemCNV-check documentation](https://stemcnv-check.readthedocs.io/)
+- [StemCNV-check on Bioconda](https://bioconda.github.io/recipes/stemcnv-check/README.html)
+- [Django documentation](https://docs.djangoproject.com/)
+- [Docker Compose documentation](https://docs.docker.com/compose/)
+
+For a longer, non-technical explanation of the interface and its required input
+files, read the [friendly StemCNV guide](README_STEMCNV.md).
